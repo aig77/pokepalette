@@ -3,11 +3,13 @@ use super::generate_scheme_blocks;
 use std::fmt;
 use std::io::Error;
 use std::path::Path;
-use rgb::Rgb;
 use image::{DynamicImage, ColorType};
 use color_thief::ColorFormat;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug)]
+use crate::rgb::Rgb;
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Sprite {
     pub name: String,
     pub scheme: Vec<Rgb<u8>>,
@@ -23,7 +25,7 @@ struct PathDetails {
     region: Region
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Region {
     Regular,
     Alola,
@@ -36,7 +38,15 @@ impl Sprite {
 
         let img = image::open(path).unwrap();
         let (buffer, color_type) = get_image_buffer(img);
-        let colors = color_thief::get_palette(&buffer, color_type, 10, 9).unwrap();
+        let colors = color_thief::get_palette(&buffer, color_type, 10, 9)
+            .unwrap()
+            .iter()
+            .map(|color| Rgb {
+                r: color.r,
+                g: color.g,
+                b: color.b
+            })
+            .collect();
 
         Sprite {
             name: path_details.name,
