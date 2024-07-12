@@ -1,13 +1,17 @@
-mod wal;
+mod rgb;
 mod sprite;
+mod jsonify;
+mod wal;
 
 use std::fs;
 use std::path::Path;
 use std::collections::HashMap;
-use rgb::Rgb;
+// use rgb::Rgb;
 
+use rgb::Rgb;
 use sprite::Sprite;
 use wal::get_wal_scheme;
+// use jsonify::generate_pokeschemes_json;
 
 fn main() {
     // get wal scheme
@@ -44,22 +48,17 @@ fn main() {
     if let Some(sprite) = sprite_map.get("Treecko") {
         println!("{}", sprite);
     }
-
 }
 
 pub fn generate_scheme_blocks(scheme: &Vec<Rgb<u8>>) -> String {
     let mut result = String::new();
 
     for color in scheme {
-        let escape_code = get_ansi_color(color);
+        let escape_code: String = color.ansi_color();
         result.push_str(&format!("{}   \x1b[0m", escape_code)); // Add color block with reset ANSI colors
     }
 
     result
-}
-
-pub fn get_ansi_color(color: &Rgb<u8>) -> String {
-    format!("\x1b[48;2;{};{};{}m", color.r, color.g, color.b)
 }
 
 fn get_sprites(dir: &Path) -> Result<Vec<Sprite>, std::io::Error> {
@@ -80,6 +79,8 @@ fn get_sprites(dir: &Path) -> Result<Vec<Sprite>, std::io::Error> {
 
     Ok(sprites)
 }
+
+
 
 
 

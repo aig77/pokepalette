@@ -1,9 +1,9 @@
-extern crate rgb;
+// extern crate rgb;
 
 use std::fs;
 use homedir::my_home;
 use std::path::PathBuf;
-use rgb::Rgb;
+use crate::rgb::Rgb;
 
 const WAL_RGB: &str = ".cache/wal/colors-rgb";
 
