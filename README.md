@@ -1,3 +1,3 @@
 # pokescheme
 
-Select a pokemon sprite based on an image's colorscheme!
+Select a pokemon sprite that matches an image's colorscheme!
