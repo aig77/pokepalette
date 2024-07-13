@@ -1,5 +1,8 @@
 use std::fmt;
+use std::path::Path;
 use serde::{Serialize, Deserialize};
+use color_thief::ColorFormat;
+use image::{DynamicImage, ColorType};
 use crate::rgb::Rgb;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -10,6 +13,28 @@ pub struct ColorScheme {
 impl ColorScheme {
     pub fn new(scheme: Vec<Rgb<u8>>) -> Self {
         ColorScheme { scheme }
+    }
+
+    pub fn from_img_path(path: &Path) -> Self {
+        let img = image::open(path).unwrap();
+        let (buffer, color_type) = get_image_buffer(img);
+
+        let mut colors: Vec<Rgb<u8>> = color_thief::get_palette(&buffer, color_type, 10, 9)
+            .unwrap()
+            .iter()
+            .map(|color| Rgb {
+                r: color.r,
+                g: color.g,
+                b: color.b
+            })
+            .collect();
+        
+        // pad with black so all schemes are size 8
+        while colors.len() < 8 {
+            colors.push( Rgb { r: 0, g: 0, b: 0 } );
+        }
+
+        ColorScheme::new(colors)
     }
 
     pub fn len(&self) -> usize {
@@ -83,4 +108,38 @@ impl fmt::Display for ColorScheme {
 
         Ok(())
     }   
+}
+
+fn get_image_buffer(img: DynamicImage) -> (Vec<u8>, ColorFormat) {
+    match img.color() {
+        ColorType::Rgb8 => {
+            let buffer = img.to_rgb8();
+            (buffer.to_vec(), ColorFormat::Rgb)
+        }
+        ColorType::Rgba8 => {
+            let buffer = img.to_rgba8();
+            (buffer.to_vec(), ColorFormat::Rgba)
+        }
+        ColorType::L8 => {
+            let buffer = img.to_luma8();
+            let rgba_buffer = buffer
+                .pixels()
+                .flat_map(|&pixel| vec![pixel[0], pixel[0], pixel[0], 255])
+                .collect();
+            (rgba_buffer, ColorFormat::Rgba)
+        }
+        ColorType::La8 => {
+            let buffer = img.to_luma_alpha8();
+            let rgba_buffer = buffer
+                .pixels()
+                .flat_map(|pixel| {
+                    let gray = pixel[0];
+                    let alpha = pixel[1];
+                    vec![gray, gray, gray, alpha]
+                })
+                .collect();
+            (rgba_buffer, ColorFormat::Rgba)
+        }
+        _ => panic!("Unsupported image type"),
+    }
 }
