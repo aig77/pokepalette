@@ -33,7 +33,7 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let k = 5;
+    let k = 10;
 
     let weights = vec![0.6, 1.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2];
 
@@ -51,30 +51,30 @@ fn main() {
     
     let top_k = get_k_nearest_sprites(&wal, &sprites, k, &weights);
 
-    for sprite in &top_k {
-        println!("{}", sprite);
-    }
+    // for (dist, sprite) in &top_k {
+    //     println!("{}\n{}\n", sprite, dist);
+    // }
 
-    let i = rng.gen_range(0..k);
+    let rand = rng.gen_range(0..k);
 
-    println!("{}", top_k[i].name);
+    println!("{}", top_k[rand].1.name);
 }
 
-fn get_k_nearest_sprites(scheme: &ColorScheme, sprites: &Vec<Sprite>, k: usize, weights: &Vec<f64>) -> Vec<Sprite> {
-    let mut distances: Vec<(f64, Sprite)> = sprites
+fn get_k_nearest_sprites<'a>(scheme: &ColorScheme, sprites: &'a [Sprite], k: usize, weights: &[f64]) -> Vec<(f64, &'a Sprite)> {
+    let mut distances: Vec<(f64, &'a Sprite)> = sprites
         .iter()
         .map(|sprite| {
-            let distance = sprite.scheme.euclidean_distance_with_weights(scheme, &weights);
-            (distance, sprite.clone())
+            let distance = sprite.scheme.euclidean_distance_with_weights(scheme, weights);
+            (distance, sprite)
         })
         .collect();
 
     distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal));
 
     distances
-        .into_iter()
-        .map(|(_, sprite)| sprite)
+        .iter()
         .take(k)
+        .map(|&(dist, sprite)| (dist, sprite))
         .collect()
 }
 
