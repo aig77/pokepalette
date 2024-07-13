@@ -40,14 +40,13 @@ pub fn get_wal_scheme(n: usize) -> ColorScheme {
         Ok(path) => ColorScheme::from_img_path(Path::new(&path)),
         Err(_) => panic!("
 Error getting wallpaper to generate colorscheme. 
-Using pywal or pywal16 is recommended since it has already generated the colorscheme for your wallpaper rather 
-than having to do it again. 
+Consider using pywal since it generates a colorscheme for your wallpaper.
   * https://github.com/dylanaraps/pywal
   * https://github.com/eylles/pywal16
 Make sure pywal is generating a colors-rgb template for Pokescheme to use.
 
 If installing pywal is not an option, Pokescheme will use the rust wallpaper crate to grab your desktop wallpaper.
-wallpaper.rs supports the following OS:
+Wallpaper supports the following OS:
   * Windows
   * macOS
   * GNOME
