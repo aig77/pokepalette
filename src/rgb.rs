@@ -1,4 +1,5 @@
-use std::fmt::Display;
+use std::fmt;
+
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -10,7 +11,7 @@ pub struct Rgb<T> {
 
 impl<T> Rgb<T> 
 where
-    T: Display,
+    T: fmt::Display,
 {
     pub fn ansi_color(&self) -> String {
         format!("\x1b[48;2;{};{};{}m", self.r, self.g, self.b)

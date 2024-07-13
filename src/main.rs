@@ -1,17 +1,17 @@
-mod rgb;
 mod sprite;
+mod colorscheme;
+mod rgb;
 mod jsonify;
 mod wal;
 
-use std::fs;
-use std::path::Path;
-use std::collections::HashMap;
-// use rgb::Rgb;
+use std::cmp::Ordering;
 
-use rgb::Rgb;
+use rand::Rng;
+use colorscheme::ColorScheme;
 use sprite::Sprite;
 use wal::get_wal_scheme;
-// use jsonify::generate_pokeschemes_json;
+use jsonify::read_sprites_json;
+use jsonify::generate_sprites_json;
 
 fn main() {
     // get wal scheme
@@ -29,55 +29,53 @@ fn main() {
     // create distance function
     // create cli tools
 
+    // generate_sprites_json();
+
+    let mut rng = rand::thread_rng();
+
+    let k = 5;
+
+    let weights = vec![0.6, 1.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2];
+
     let wal = get_wal_scheme(8);
 
-    println!("wal: {}\n", generate_scheme_blocks(&wal));
+    println!("{}", wal);
 
-    let sprites = get_sprites(Path::new("./data/pokemon-gen8/regular/"))
-        .expect("unable to get pokemon from dir");
+    let sprites = match read_sprites_json() {
+        Ok(vec) => vec,
+        Err(err) => {
+            eprintln!("error reading sprite data from json: {}", err);
+            return;
+        }
+    };
+    
+    let top_k = get_k_nearest_sprites(&wal, &sprites, k, &weights);
 
-    let sprite_map: HashMap<String, &Sprite> = sprites
+    for sprite in &top_k {
+        println!("{}", sprite);
+    }
+
+    let i = rng.gen_range(0..k);
+
+    println!("{}", top_k[i].name);
+}
+
+fn get_k_nearest_sprites(scheme: &ColorScheme, sprites: &Vec<Sprite>, k: usize, weights: &Vec<f64>) -> Vec<Sprite> {
+    let mut distances: Vec<(f64, Sprite)> = sprites
         .iter()
-        .map(|sprite| (sprite.name.clone(), sprite))
+        .map(|sprite| {
+            let distance = sprite.scheme.euclidean_distance_with_weights(scheme, &weights);
+            (distance, sprite.clone())
+        })
         .collect();
 
-    if let Some(sprite) = sprite_map.get("Pikachu") {
-        println!("{}", sprite);
-    }
+    distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal));
 
-    if let Some(sprite) = sprite_map.get("Treecko") {
-        println!("{}", sprite);
-    }
-}
-
-pub fn generate_scheme_blocks(scheme: &Vec<Rgb<u8>>) -> String {
-    let mut result = String::new();
-
-    for color in scheme {
-        let escape_code: String = color.ansi_color();
-        result.push_str(&format!("{}   \x1b[0m", escape_code)); // Add color block with reset ANSI colors
-    }
-
-    result
-}
-
-fn get_sprites(dir: &Path) -> Result<Vec<Sprite>, std::io::Error> {
-    let mut sprites = vec![];
-
-    let entries = fs::read_dir(dir)?;
-
-    for entry in entries {
-        let entry = entry?;
-        let path = entry.path();
-
-        if let Some(extension) = path.extension() {
-            if extension == "png" {
-                sprites.push(Sprite::new(&path));
-            }
-        }
-    }
-
-    Ok(sprites)
+    distances
+        .into_iter()
+        .map(|(_, sprite)| sprite)
+        .take(k)
+        .collect()
 }
 
 
