@@ -1,13 +1,12 @@
-// extern crate rgb;
-
 use std::fs;
 use homedir::my_home;
 use std::path::PathBuf;
 use crate::rgb::Rgb;
+use crate::colorscheme::ColorScheme;
 
 const WAL_RGB: &str = ".cache/wal/colors-rgb";
 
-pub fn get_wal_scheme(n: usize) -> Vec<Rgb<u8>> {
+pub fn get_wal_scheme(n: usize) -> ColorScheme {
     let mut scheme = vec![];
 
     let wal_path: PathBuf = match my_home().expect("unable to find home directory") {
@@ -35,7 +34,7 @@ pub fn get_wal_scheme(n: usize) -> Vec<Rgb<u8>> {
         Err(e) => eprintln!("Error reading file: {}", e)
     }
 
-    scheme
+    ColorScheme::new(scheme)
 }
 
 fn read_first_n_lines(filename: PathBuf, n: usize) -> Result<Vec<String>, std::io::Error> {

@@ -1,4 +1,4 @@
-use super::generate_scheme_blocks;
+// use super::generate_scheme_blocks;
 
 use std::fmt;
 use std::io::Error;
@@ -8,37 +8,41 @@ use color_thief::ColorFormat;
 use serde::{Serialize, Deserialize};
 
 use crate::rgb::Rgb;
+use crate::colorscheme::ColorScheme;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sprite {
     pub name: String,
-    pub scheme: Vec<Rgb<u8>>,
+    pub scheme: ColorScheme,
     pub shiny: bool,
     pub female: bool,
-    pub region: Region
+    pub regional_variant: RegionalVariant
 }
 
 struct PathDetails {
     name: String,
     shiny: bool,
     female: bool,
-    region: Region
+    regional_variant: RegionalVariant
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub enum Region {
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Serialize, Deserialize)]
+pub enum RegionalVariant {
     Regular,
     Alola,
     Galar
 }
 
+impl Eq for RegionalVariant {}
+
 impl Sprite {
     pub fn new(path: &Path) -> Sprite {
-        let path_details = get_path_details(path);
+        let path_details = PathDetails::new(path);
 
         let img = image::open(path).unwrap();
         let (buffer, color_type) = get_image_buffer(img);
-        let colors = color_thief::get_palette(&buffer, color_type, 10, 9)
+
+        let mut colors: Vec<Rgb<u8>> = color_thief::get_palette(&buffer, color_type, 10, 9)
             .unwrap()
             .iter()
             .map(|color| Rgb {
@@ -47,13 +51,20 @@ impl Sprite {
                 b: color.b
             })
             .collect();
+        
+        // pad with black so all schemes are size 8
+        while colors.len() < 8 {
+            colors.push( Rgb { r: 0, g: 0, b: 0 });
+        }
+
+        let scheme = ColorScheme::new(colors);
 
         Sprite {
             name: path_details.name,
-            scheme: colors,
+            scheme: scheme,
             shiny: path_details.shiny,
             female: path_details.female,
-            region: path_details.region,
+            regional_variant: path_details.regional_variant,
         }
     }
 }
@@ -62,39 +73,41 @@ impl fmt::Display for Sprite {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", self.name)?;
         writeln!(f, "------------------------")?;
-        writeln!(f, "scheme: {}", generate_scheme_blocks(&self.scheme))?;
-        writeln!(f, "shiny:  {}", self.shiny)?;
-        writeln!(f, "female: {}", self.female)?;
-        writeln!(f, "region: {:?}", self.region)?;
+        writeln!(f, "scheme:  {}", self.scheme)?;
+        writeln!(f, "shiny:   {}", self.shiny)?;
+        writeln!(f, "female:  {}", self.female)?;
+        writeln!(f, "variant: {:?}", self.regional_variant)?;
         Ok(())
     }   
 }
 
-fn get_path_details(path: &Path) -> PathDetails {
-    let name = get_name_from_file_stem(path)
-        .expect("unable to get name from file stem in path");
-
-    let shiny: bool = match path.to_str() {
-        Some(path_str) => path_str.contains("shiny"),
-        _ => false
-    };
-
-    let female: bool = match path.to_str() {
-        Some(path_str) => path_str.contains("female"),
-        _ => false
-    };
-
-    let region: Region = match path.to_str() {
-        Some(path_str) if path_str.contains("alola") => Region::Alola,
-        Some(path_str) if path_str.contains("galar") => Region::Galar,
-        _ => Region::Regular
-    };
-
-    PathDetails {
-        name: name,
-        female: female,
-        shiny: shiny,
-        region: region
+impl PathDetails {
+    fn new(path: &Path) -> PathDetails {
+        let name = get_name_from_file_stem(path)
+            .expect("unable to get name from file stem in path");
+    
+        let shiny: bool = match path.to_str() {
+            Some(path_str) => path_str.contains("shiny"),
+            _ => false
+        };
+    
+        let female: bool = match path.to_str() {
+            Some(path_str) => path_str.contains("female"),
+            _ => false
+        };
+    
+        let regional_variant: RegionalVariant = match path.to_str() {
+            Some(path_str) if path_str.contains("alola") => RegionalVariant::Alola,
+            Some(path_str) if path_str.contains("galar") => RegionalVariant::Galar,
+            _ => RegionalVariant::Regular
+        };
+    
+        PathDetails {
+            name: name,
+            shiny: shiny,
+            female: female,
+            regional_variant: regional_variant
+        }
     }
 }
 
