@@ -45,7 +45,7 @@ impl fmt::Display for Sprite {
         writeln!(f, "scheme:  {}", self.scheme)?;
         writeln!(f, "shiny:   {}", self.shiny)?;
         writeln!(f, "female:  {}", self.female)?;
-        writeln!(f, "variant: {:?}", self.regional_variant)?;
+        write!(f, "variant: {:?}", self.regional_variant)?;
         Ok(())
     }   
 }
