@@ -11,6 +11,7 @@ pub struct Sprite {
     pub scheme: ColorScheme,
     pub shiny: bool,
     pub female: bool,
+    pub mega: bool,
     pub regional_variant: RegionalVariant
 }
 
@@ -33,6 +34,7 @@ impl Sprite {
             scheme: scheme,
             shiny: path_details.shiny,
             female: path_details.female,
+            mega: path_details.mega,
             regional_variant: path_details.regional_variant,
         }
     }
@@ -45,6 +47,7 @@ impl fmt::Display for Sprite {
         writeln!(f, "scheme:  {}", self.scheme)?;
         writeln!(f, "shiny:   {}", self.shiny)?;
         writeln!(f, "female:  {}", self.female)?;
+        writeln!(f, "mega:    {}", self.mega)?;
         write!(f, "variant: {:?}", self.regional_variant)?;
         Ok(())
     }   
@@ -54,11 +57,12 @@ struct PathDetails {
     name: String,
     shiny: bool,
     female: bool,
+    mega: bool,
     regional_variant: RegionalVariant
 }
 
 impl PathDetails {
-    fn new(path: &Path) -> PathDetails {
+    fn new(path: &Path) -> PathDetails {        
         let name = get_name_from_file_stem(path)
             .expect("unable to get name from file stem in path");
     
@@ -71,6 +75,11 @@ impl PathDetails {
             Some(path_str) => path_str.contains("female"),
             _ => false
         };
+
+        let mega: bool = match path.to_str() {
+            Some(path_str) => path_str.contains("mega"),
+            _ => false,
+        };
     
         let regional_variant: RegionalVariant = match path.to_str() {
             Some(path_str) if path_str.contains("alola") => RegionalVariant::Alola,
@@ -79,10 +88,11 @@ impl PathDetails {
         };
     
         PathDetails {
-            name: name,
-            shiny: shiny,
-            female: female,
-            regional_variant: regional_variant
+            name,
+            shiny,
+            female,
+            mega,
+            regional_variant
         }
     }
 }
