@@ -7,11 +7,11 @@ use crate::rgb::Rgb;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ColorScheme {
-    scheme: Vec<Rgb<u8>>
+    pub scheme: Vec<Rgb>
 }
 
 impl ColorScheme {
-    pub fn new(scheme: Vec<Rgb<u8>>) -> Self {
+    pub fn new(scheme: Vec<Rgb>) -> Self {
         ColorScheme { scheme }
     }
 
@@ -19,7 +19,7 @@ impl ColorScheme {
         let img = image::open(path).unwrap();
         let (buffer, color_type) = get_image_buffer(img);
 
-        let mut colors: Vec<Rgb<u8>> = color_thief::get_palette(&buffer, color_type, 10, 9)
+        let mut colors: Vec<Rgb> = color_thief::get_palette(&buffer, color_type, 10, 9)
             .unwrap()
             .iter()
             .map(|color| Rgb {
@@ -31,7 +31,7 @@ impl ColorScheme {
         
         // pad with black so all schemes are size 8
         while colors.len() < 8 {
-            colors.push( Rgb { r: 0, g: 0, b: 0 } );
+            colors.push( Rgb { r: 204, g: 185, b: 196 } );
         }
 
         ColorScheme::new(colors)
@@ -43,24 +43,14 @@ impl ColorScheme {
 
     pub fn euclidean_distance_with_weights(&self, other: &ColorScheme, weights: &[f64]) -> f64 {
         let sum_squared_diff = self.scheme.iter().enumerate()
+            // filter out first element because it will most likely be black
+            // .filter(|&(i, _)| i > 0)
             .fold(0.0, | acc, (i, self_color) | {
-                let self_norm = Rgb {
-                    r: self_color.r as f64 / 255.0,
-                    g: self_color.g as f64 / 255.0,
-                    b: self_color.b as f64 / 255.0
-                };
-
-                let other_color = &other.scheme[i];
-                let other_norm = Rgb {
-                    r: other_color.r as f64 / 255.0,
-                    g: other_color.g as f64 / 255.0,
-                    b: other_color.b as f64 / 255.0
-                };
-
-                let diff_r = (self_norm.r - other_norm.r).powi(2) * weights[i];
-                let diff_g = (self_norm.g - other_norm.g).powi(2) * weights[i];
-                let diff_b = (self_norm.b - other_norm.b).powi(2) * weights[i];
-
+                let self_norm = self_color.normalize();
+                let other_norm = other.scheme[i].normalize();
+                let diff_r = (self_norm.0 - other_norm.0).powi(2) * weights[i];
+                let diff_g = (self_norm.1 - other_norm.1).powi(2) * weights[i];
+                let diff_b = (self_norm.2 - other_norm.2).powi(2) * weights[i];
                 acc + diff_r + diff_g + diff_b
             });
         
