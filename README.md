@@ -17,7 +17,7 @@ Pokescheme tries to find your desktop wallpaper using two methods:
 | `--no-shiny`    | Removes shiny sprites from the query.                                                              |
 | `--no-mega`     | Removes mega sprites from the query.                                                               |
 | `--no-regional` | Removes regional variant sprites from the query.                                                   |
-| `--verbose`     | Verbose output includes the current wallpaper colorscheme and the other k selected sprites' colorschemes plus their distances to the wallpaper scheme. |
+| `--verbose`     | Prints the current wallpaper colorscheme and the other k sprites' colorschemes including their distances to the wallpaper scheme. |
 
 
 
