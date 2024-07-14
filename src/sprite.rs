@@ -44,11 +44,11 @@ impl fmt::Display for Sprite {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", self.name)?;
         writeln!(f, "------------------------")?;
-        writeln!(f, "scheme:  {}", self.scheme)?;
-        writeln!(f, "shiny:   {}", self.shiny)?;
-        writeln!(f, "female:  {}", self.female)?;
-        writeln!(f, "mega:    {}", self.mega)?;
-        write!(f, "variant: {:?}", self.regional_variant)?;
+        writeln!(f, "scheme:   {}", self.scheme)?;
+        writeln!(f, "shiny:    {}", self.shiny)?;
+        writeln!(f, "female:   {}", self.female)?;
+        writeln!(f, "mega:     {}", self.mega)?;
+        write!(f, "variant:  {:?}", self.regional_variant)?;
         Ok(())
     }   
 }
