@@ -3,17 +3,34 @@ use std::io::{Read, Write};
 use std::error::Error;
 use serde_json;
 use std::path::Path;
-use crate::sprite::Sprite;
+use crate::sprite::{Sprite, RegionalVariant};
+
+use super::Flags;
 
 const JSON_PATH: &str = "./data/sprites.json";
 const SPRITES_PATH: &str = "./data/pokemon-gen8";
 
-pub fn read_sprites_json() -> Result<Vec<Sprite>, Box<dyn Error>>{
+pub fn read_sprites_json(flags: &Flags) -> Result<Vec<Sprite>, Box<dyn Error>>{
     let mut file = fs::File::open(JSON_PATH)?;
     let mut json_data = String::new();
     file.read_to_string(&mut json_data)?;
 
-    let sprites: Vec<Sprite> = serde_json::from_str(&json_data)?;
+    let sprites: Vec<Sprite> = serde_json::from_str::<Vec<Sprite>>(&json_data)?
+        .into_iter()
+        .filter(|sprite| {
+            let include_sprite = 
+            (!flags.no_shiny || !sprite.shiny) &&
+            (!flags.no_female || !sprite.female) &&
+            (!flags.no_mega || !sprite.mega) &&
+            (!flags.no_regional_variant || {
+                match sprite.regional_variant {
+                    RegionalVariant::Regular => true,
+                    _ => false
+                }
+            });
+
+            include_sprite
+        }).collect();
 
     Ok(sprites)
 }
