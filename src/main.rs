@@ -19,14 +19,11 @@ pub struct Flags {
     no_female: bool,
     no_mega: bool,
     no_regional_variant: bool,
+    verbose: bool
 }
 
 enum FlagEnum {
     K,
-    Shiny,
-    Female,
-    Mega,
-    RegionalVariant,
     Default
 }
 
@@ -37,41 +34,31 @@ impl Flags {
             no_shiny: false,
             no_female: false,
             no_mega: false,
-            no_regional_variant: false
+            no_regional_variant: false,
+            verbose: false
         };
         
         let mut prev: FlagEnum = FlagEnum::Default;
 
         for arg in args {
             match arg.as_str() {
-                "--no-shiny" => { 
-                    flags.no_shiny = true; 
-                    prev = FlagEnum::Shiny 
-                },
-                "--no-female" => {
-                    flags.no_female = true;
-                    prev = FlagEnum::Female
-                },
-                "--no-mega" => {
-                    flags.no_mega = true;
-                    prev = FlagEnum::Mega
-                },
-                "--no-regional" => {
-                    flags.no_regional_variant = true;
-                    prev = FlagEnum::RegionalVariant
-                }
-                "-k" => {
-                    prev = FlagEnum::K
-                },
+                "--no-shiny" => flags.no_shiny = true,
+                "--no-female" => flags.no_female = true,
+                "--no-mega" => flags.no_mega = true,
+                "--no-regional" => flags.no_regional_variant = true,
+                "-k" => prev = FlagEnum::K,
+                "--verbose" => flags.verbose = true,
                 val => {
                     match prev {
-                        FlagEnum::K => flags.k = val.parse().expect("invalid value for k"),
+                        FlagEnum::K => {
+                            flags.k = val.parse().expect("invalid value for k");
+                            prev = FlagEnum::Default;
+                        },
                         _ => continue,
                     }
                 }
             }
         }
-
         flags
     }
 }
@@ -89,8 +76,6 @@ fn main() {
 
     let wal = get_wal_scheme(8);
 
-    println!("{}", wal);
-
     let sprites = match read_sprites_json(&flags) {
         Ok(vec) => vec,
         Err(err) => {
@@ -101,8 +86,13 @@ fn main() {
     
     let top_k = get_k_nearest_sprites(&wal, &sprites, k, &weights);
 
-    for (dist, sprite) in &top_k {
-        println!("{}\n{}\n", sprite, dist);
+    if flags.verbose {
+        println!("wal:  {}\n", wal);
+
+        for (dist, sprite) in &top_k {
+            println!("{}", sprite);
+            println!("distance: {:.4}\n", dist);
+        }
     }
 
     let rand = rng.gen_range(0..k);
