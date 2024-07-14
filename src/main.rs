@@ -4,8 +4,8 @@ mod rgb;
 mod jsonify;
 mod wal;
 
+use std::env;
 use std::cmp::Ordering;
-
 use rand::Rng;
 use colorscheme::ColorScheme;
 use sprite::Sprite;
@@ -13,27 +13,77 @@ use wal::get_wal_scheme;
 use jsonify::read_sprites_json;
 use jsonify::generate_sprites_json;
 
+pub struct Flags {
+    k: usize,
+    no_shiny: bool,
+    no_female: bool,
+    no_mega: bool,
+    no_regional_variant: bool,
+}
+
+enum FlagEnum {
+    K,
+    Shiny,
+    Female,
+    Mega,
+    RegionalVariant,
+    Default
+}
+
+impl Flags {
+    fn new(args: &[String]) -> Flags {
+        let mut flags = Flags {
+            k: 5,
+            no_shiny: false,
+            no_female: false,
+            no_mega: false,
+            no_regional_variant: false
+        };
+        
+        let mut prev: FlagEnum = FlagEnum::Default;
+
+        for arg in args {
+            match arg.as_str() {
+                "--no-shiny" => { 
+                    flags.no_shiny = true; 
+                    prev = FlagEnum::Shiny 
+                },
+                "--no-female" => {
+                    flags.no_female = true;
+                    prev = FlagEnum::Female
+                },
+                "--no-mega" => {
+                    flags.no_mega = true;
+                    prev = FlagEnum::Mega
+                },
+                "--no-regional" => {
+                    flags.no_regional_variant = true;
+                    prev = FlagEnum::RegionalVariant
+                }
+                "-k" => {
+                    prev = FlagEnum::K
+                },
+                val => {
+                    match prev {
+                        FlagEnum::K => flags.k = val.parse().expect("invalid value for k"),
+                        _ => continue,
+                    }
+                }
+            }
+        }
+
+        flags
+    }
+}
+
 fn main() {
-    // get wal scheme
-
-    // get pokemon scheme map
-
-    // calc distances from wal scheme to all instances in pokemon scheme map
-
-    // grab k smallest distances
-
-    // return them
-
-    // TODO:
-    // create file with pokemon schemes stored for faster access
-    // create distance function
-    // create cli tools
-
-    // generate_sprites_json();
-
     let mut rng = rand::thread_rng();
 
-    let k = 10;
+    let args: Vec<String> = env::args().collect();
+
+    let flags =  Flags::new(&args);
+
+    let k = flags.k;
 
     let weights = vec![0.6, 1.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2];
 
@@ -41,7 +91,7 @@ fn main() {
 
     println!("{}", wal);
 
-    let sprites = match read_sprites_json() {
+    let sprites = match read_sprites_json(&flags) {
         Ok(vec) => vec,
         Err(err) => {
             eprintln!("error reading sprite data from json: {}", err);
@@ -51,9 +101,9 @@ fn main() {
     
     let top_k = get_k_nearest_sprites(&wal, &sprites, k, &weights);
 
-    // for (dist, sprite) in &top_k {
-    //     println!("{}\n{}\n", sprite, dist);
-    // }
+    for (dist, sprite) in &top_k {
+        println!("{}\n{}\n", sprite, dist);
+    }
 
     let rand = rng.gen_range(0..k);
 
