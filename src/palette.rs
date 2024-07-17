@@ -1,12 +1,10 @@
 use std::fmt;
 use std::path::Path;
-use std::io::Error;
 use serde::{Serialize, Deserialize};
 use image::{ColorType, DynamicImage};
 use color_thief::ColorFormat;
 use crate::color::Rgb;
 
-// use lab::Lab;
 use delta_e::*;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -26,7 +24,6 @@ impl Palette<Rgb<u8>> {
         let img = img.to_rgb8();
         let buffer = img.into_raw();
         let color_type = color_thief::ColorFormat::Rgb;
-        // let (buffer, color_type) = get_image_buffer(img);
 
         let mut colors: Vec<Rgb<u8>> = color_thief::get_palette(&buffer, color_type, 10, 9)
             .unwrap()
@@ -69,14 +66,6 @@ impl Palette<Rgb<u8>> {
         self.euclidean_distance_with_weights(other, &vec![1.0; self.len()])
     }
 
-    // pub fn to_lab(&self) -> Palette<Lab> {
-    //     let mut rgbs = vec![];
-    //     for color in &self.colors {
-    //         rgbs.push([color.r, color.g, color.b]);
-    //     }
-    //     Palette::new(lab::rgbs_to_labs(&rgbs))
-    // }
-
     pub fn de2000_distance(&self, other: &Palette<Rgb<u8>>) -> f64 {
         let sum = self.colors.iter().enumerate()
             .fold(0.0, |acc, (i, color)| {
@@ -105,58 +94,37 @@ impl fmt::Display for Palette<Rgb<u8>> {
     }   
 }
 
-// impl Palette<Lab> {
-//     pub fn len(&self) -> usize {
-//         self.colors.len()
-//     }
-
-//     pub fn ciede2000_distance(&self, other: &Palette<Lab>) -> f64 {
-//         if self.len() != other.len() {
-//             panic!("palettes must have the same length");
-//         }
-
-//         let mut total_distance = 0.0;
-
-//         for i in 0..self.len() {
-//             let color1 = self.colors[i];
-//             let color2 = other.colors[i];
-//             total_distance += DeltaE::new(color1, color2, DE2000);
-//         }
-
-//         total_distance / self.len() as f64
-//     }
-// }
-
-// fn get_image_buffer(img: DynamicImage) -> (Vec<u8>, ColorFormat) {
-//     match img.color() {
-//         ColorType::Rgb8 => {
-//             let buffer = img.to_rgb8();
-//             (buffer.to_vec(), ColorFormat::Rgb)
-//         }
-//         ColorType::Rgba8 => {
-//             let buffer = img.to_rgba8();
-//             (buffer.to_vec(), ColorFormat::Rgba)
-//         }
-//         ColorType::L8 => {
-//             let buffer = img.to_luma8();
-//             let rgba_buffer = buffer
-//                 .pixels()
-//                 .flat_map(|&pixel| vec![pixel[0], pixel[0], pixel[0], 255])
-//                 .collect();
-//             (rgba_buffer, ColorFormat::Rgba)
-//         }
-//         ColorType::La8 => {
-//             let buffer = img.to_luma_alpha8();
-//             let rgba_buffer = buffer
-//                 .pixels()
-//                 .flat_map(|pixel| {
-//                     let gray = pixel[0];
-//                     let alpha = pixel[1];
-//                     vec![gray, gray, gray, alpha]
-//                 })
-//                 .collect();
-//             (rgba_buffer, ColorFormat::Rgba)
-//         }
-//         _ => panic!("Unsupported image type"),
-//     }
-// }
+#[deprecated]
+fn get_image_buffer(img: DynamicImage) -> (Vec<u8>, ColorFormat) {
+    match img.color() {
+        ColorType::Rgb8 => {
+            let buffer = img.to_rgb8();
+            (buffer.to_vec(), ColorFormat::Rgb)
+        }
+        ColorType::Rgba8 => {
+            let buffer = img.to_rgba8();
+            (buffer.to_vec(), ColorFormat::Rgba)
+        }
+        ColorType::L8 => {
+            let buffer = img.to_luma8();
+            let rgba_buffer = buffer
+                .pixels()
+                .flat_map(|&pixel| vec![pixel[0], pixel[0], pixel[0], 255])
+                .collect();
+            (rgba_buffer, ColorFormat::Rgba)
+        }
+        ColorType::La8 => {
+            let buffer = img.to_luma_alpha8();
+            let rgba_buffer = buffer
+                .pixels()
+                .flat_map(|pixel| {
+                    let gray = pixel[0];
+                    let alpha = pixel[1];
+                    vec![gray, gray, gray, alpha]
+                })
+                .collect();
+            (rgba_buffer, ColorFormat::Rgba)
+        }
+        _ => panic!("Unsupported image type"),
+    }
+}

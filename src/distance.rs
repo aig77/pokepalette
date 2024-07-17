@@ -65,18 +65,12 @@ impl DistanceFn<f64> for DE2000DistanceFn {
 pub struct MSSDDistanceFn;
 impl DistanceFn<f64> for MSSDDistanceFn {
     fn color_distance(&self, color1: &Rgb<u8>, color2: &Rgb<u8>) -> f64 {
-        0.0
+        EuclideanDistanceFn.color_distance(color1, color2)
     }
 
     fn palette_distance(&self, palette1: &Palette<Rgb<u8>>, palette2: &Palette<Rgb<u8>>) -> f64 {
         let n = palette1.len();
         let m = palette2.len();
-
-        // if n != m {
-        //     panic!("color palettes must be the same length");
-        // }
-
-        // let dist_matrix = vec![vec![0.0; m+1]; n+1];
 
         let dist_matrix: Vec<Vec<f64>> = palette1.colors.iter()
             .map(|color1| {
@@ -103,6 +97,7 @@ impl DistanceFn<f64> for MSSDDistanceFn {
             }
         }
 
+        // (min_sum, best_pairing)
         min_sum
     }
 }

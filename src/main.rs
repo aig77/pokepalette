@@ -6,12 +6,9 @@ mod jsonify;
 mod wal;
 mod distance;
 
-use std::env;
 use std::cmp::Ordering;
 use rand::Rng;
 use std::error::Error;
-use std::collections::HashMap;
-
 
 use flags::Flags;
 use color::Rgb;
@@ -20,7 +17,6 @@ use sprite::Sprite;
 use wal::get_wal_palette;
 use jsonify::read_sprites_json;
 use jsonify::generate_sprites_json;
-use distance::*;
 
 
 const JSON_PATH: &str = "./data/sprites.json";
@@ -32,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let wal = get_wal_palette(WAL_palette_SIZE);
 
-    // generate_sprites_json(SPRITES_PATH, JSON_PATH, WAL_palette_SIZE);
+    // generate_sprites_json(SPRITES_PATH, JSON_PATH)?;
 
     let sprites = read_sprites_json(JSON_PATH, &flags)?;
 
