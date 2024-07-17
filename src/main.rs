@@ -16,17 +16,16 @@ use palette::Palette;
 use sprite::Sprite;
 use wal::get_wal_palette;
 use jsonify::read_sprites_json;
-use jsonify::generate_sprites_json;
-
+// use jsonify::generate_sprites_json;
 
 const JSON_PATH: &str = "./data/sprites.json";
-const SPRITES_PATH: &str = "./data/pokemon-gen8";
-const WAL_palette_SIZE: usize = 8;
+// const SPRITES_PATH: &str = "./data/pokemon-gen8";
+const WAL_PALETTE_SIZE: usize = 8;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let flags =  Flags::new();
 
-    let wal = get_wal_palette(WAL_palette_SIZE);
+    let wal = get_wal_palette(WAL_PALETTE_SIZE);
 
     // generate_sprites_json(SPRITES_PATH, JSON_PATH)?;
 
