@@ -1,3 +1,4 @@
+mod flags;
 mod sprite;
 mod palette;
 mod color;
@@ -8,6 +9,11 @@ mod distance;
 use std::env;
 use std::cmp::Ordering;
 use rand::Rng;
+use std::error::Error;
+use std::collections::HashMap;
+
+
+use flags::Flags;
 use color::Rgb;
 use palette::Palette;
 use sprite::Sprite;
@@ -16,102 +22,21 @@ use jsonify::read_sprites_json;
 use jsonify::generate_sprites_json;
 use distance::*;
 
-use std::collections::HashMap;
-// use rgb::Rgb;
 
 const JSON_PATH: &str = "./data/sprites.json";
 const SPRITES_PATH: &str = "./data/pokemon-gen8";
 const WAL_palette_SIZE: usize = 8;
 
-pub struct Flags {
-    k: usize,
-    no_shiny: bool,
-    no_female: bool,
-    no_mega: bool,
-    no_regional_variant: bool,
-    verbose: bool
-}
-
-enum FlagEnum {
-    K,
-    Default
-}
-
-impl Flags {
-    fn new(args: &[String]) -> Flags {
-        let mut flags = Flags {
-            k: 5,
-            no_shiny: false,
-            no_female: false,
-            no_mega: false,
-            no_regional_variant: false,
-            verbose: false
-        };
-        
-        let mut prev: FlagEnum = FlagEnum::Default;
-
-        for arg in args {
-            match arg.as_str() {
-                "--no-shiny" => flags.no_shiny = true,
-                "--no-female" => flags.no_female = true,
-                "--no-mega" => flags.no_mega = true,
-                "--no-regional" => flags.no_regional_variant = true,
-                "-k" => prev = FlagEnum::K,
-                "--verbose" => flags.verbose = true,
-                val => {
-                    match prev {
-                        FlagEnum::K => {
-                            flags.k = val.parse().expect("invalid value for k");
-                            prev = FlagEnum::Default;
-                        },
-                        _ => continue,
-                    }
-                }
-            }
-        }
-        flags
-    }
-}
-
-fn main() {
-    
-
-    let mut rng = rand::thread_rng();
-
-    let args: Vec<String> = env::args().collect();
-
-    let flags =  Flags::new(&args);
-
-    let k = flags.k;
-
-    // let weights = vec![0.1, 0.6, 1.0, 1.0, 1.0, 1.0, 0.6, 0.2];
-    let weights = vec![0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.1];
+fn main() -> Result<(), Box<dyn Error>> {
+    let flags =  Flags::new();
 
     let wal = get_wal_palette(WAL_palette_SIZE);
 
-    generate_sprites_json(SPRITES_PATH, JSON_PATH, WAL_palette_SIZE);
+    // generate_sprites_json(SPRITES_PATH, JSON_PATH, WAL_palette_SIZE);
 
-    let sprites = match read_sprites_json(JSON_PATH, &flags) {
-        Ok(vec) => vec,
-        Err(err) => {
-            eprintln!("error reading sprite data from json: {}", err);
-            return;
-        }
-    };
+    let sprites = read_sprites_json(JSON_PATH, &flags)?;
 
-    // let mut palette_count = HashMap::new();
-
-    // for sprite in &sprites {
-    //     let count = palette_count.entry(sprite.palette.len()).or_insert(0);
-    //     *count += 1;
-    // }
-
-    // println!("{:?}", palette_count);
-
-    // for sprite in &sprites {
-    //     println!("{}", sprite.palette.len());
-    // }
-    
+    let k = flags.k;
     let top_k_e = get_k_nearest_sprites(&sprites, &wal, k, distance::EuclideanDistanceFn);
     let top_k_d = get_k_nearest_sprites(&sprites, &wal, k, distance::DE2000DistanceFn);
     let top_k_m = get_k_nearest_sprites(&sprites, &wal, k, distance::MSSDDistanceFn);
@@ -140,9 +65,12 @@ fn main() {
             println!("distance: {:.4}\n", dist);
         }
     }
-    let rand = rng.gen_range(0..k);
 
+    let mut rng = rand::thread_rng();
+    let rand = rng.gen_range(0..k);
     println!("{}", top_k_e[rand].1.name);
+
+    Ok(())
 }
 
 fn get_k_nearest_sprites<'a, D>(
