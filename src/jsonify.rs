@@ -1,17 +1,17 @@
+use rand::Rng;
 use std::fs;
 use std::io::{Read, Write};
 use std::error::Error;
 use serde_json;
 use std::path::Path;
+use std::collections::HashMap;
 use crate::sprite::{Sprite, RegionalVariant};
+use crate::color::Rgb;
 
 use super::Flags;
 
-const JSON_PATH: &str = "./data/sprites.json";
-const SPRITES_PATH: &str = "./data/pokemon-gen8";
-
-pub fn read_sprites_json(flags: &Flags) -> Result<Vec<Sprite>, Box<dyn Error>>{
-    let mut file = fs::File::open(JSON_PATH)?;
+pub fn read_sprites_json(filename: &str, flags: &Flags) -> Result<Vec<Sprite>, Box<dyn Error>>{
+    let mut file = fs::File::open(filename)?;
     let mut json_data = String::new();
     file.read_to_string(&mut json_data)?;
 
@@ -35,10 +35,24 @@ pub fn read_sprites_json(flags: &Flags) -> Result<Vec<Sprite>, Box<dyn Error>>{
     Ok(sprites)
 }
 
-pub fn generate_sprites_json() {
+pub fn generate_sprites_json(sprite_dir: &str, json_name: &str, size: usize) {
 
-    let sprites = get_sprites(Path::new(SPRITES_PATH))
+    // let mut rng = rand::thread_rng();
+
+    let sprites = get_sprites(Path::new(sprite_dir))
         .expect("error reading sprites");
+
+    // add random color to sprite's colorscheme to pad up to size of wallpaper scheme
+    // let color_counts = get_color_counts(&sprites);
+    // let color_counts_len = color_counts.len();
+
+    // for sprite in &mut sprites {
+    //     let scheme = &mut sprite.scheme;
+    //     while scheme.len() < size {
+    //         let r = rng.gen_range(0..color_counts_len);
+    //         scheme.colors.push(color_counts[r].0.clone());
+    //     }
+    // }
 
     let json_data = match serde_json::to_string_pretty(&sprites) {
         Ok(json) => json,
@@ -48,7 +62,7 @@ pub fn generate_sprites_json() {
         }
     };
 
-    let mut file = match fs::File::create(Path::new(JSON_PATH)) {
+    let mut file = match fs::File::create(Path::new(json_name)) {
         Ok(file) => file,
         Err(err) => {
             eprintln!("error creating file: {}", err);
@@ -85,3 +99,54 @@ fn get_sprites(dir: &Path) -> Result<Vec<Sprite>, Box<dyn Error>> {
 
     Ok(sprites)
 }
+
+fn get_color_counts(sprites: &Vec<Sprite>) -> Vec<(Rgb<u8>, u32)> {
+    let mut colormap: HashMap<Rgb<u8>, u32> = HashMap::new();
+
+    for sprite in sprites {
+        for color in &sprite.scheme.colors {
+            let count = colormap.entry(*color).or_insert(0);
+            *count += 1;
+        }
+    }
+
+    let mut entries: Vec<(Rgb<u8>, u32)> = colormap.into_iter().collect();
+    entries.sort_by_key(|&(_, count)| count);
+
+    entries
+}
+
+fn get_most_common_colors(color_counts: Vec<(Rgb<u8>, u32)>) -> Vec<(Rgb<u8>, u32)>  {
+
+    let mut median_counts = vec![];
+    let mid = color_counts.len() / 2;
+    let median_value = color_counts[mid].1;
+
+    median_counts.push(color_counts[mid].clone());
+    let mut i = mid as isize - 1;
+    while i >= 0 && color_counts[i as usize].1 == median_value {
+        median_counts.push(color_counts[i as usize].clone());
+        i -= 1;
+    }
+
+    median_counts
+}
+
+// let sums = self.scheme.iter()
+    //     .fold((0, 0, 0), |acc, color| {
+    //         (acc.0 + color.r as u32, acc.1 + color.g as u32, acc.2 + color.b as u32)
+    //     });
+
+    // Rgb {
+    //     r: (sums.0 / self.len() as u32) as u8,
+    //     g: (sums.1 / self.len() as u32) as u8,
+    //     b: (sums.2 / self.len() as u32) as u8
+    // }
+
+    // let colors: Vec<Rgb<u8>> = sprites.iter()
+    //     .flat_map(|s| s.scheme.scheme.clone().into_iter())
+    //     .collect();
+
+    // let total_colors = sprites.clone()
+    //     .into_iter()
+    //     .fold(0, |acc, sprite| acc + sprite.scheme.scheme.len());

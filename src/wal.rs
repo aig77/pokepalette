@@ -1,12 +1,12 @@
 use std::fs;
 use homedir::my_home;
 use std::path::{PathBuf, Path};
-use crate::rgb::Rgb;
+use crate::color::Rgb;
 use crate::colorscheme::ColorScheme;
 
 const WAL_RGB: &str = ".cache/wal/colors-rgb";
 
-pub fn get_wal_scheme(n: usize) -> ColorScheme {
+pub fn get_wal_scheme(n: usize) -> ColorScheme<Rgb<u8>> {
     // try pywal
     match my_home() {
         Ok(buf) => {
