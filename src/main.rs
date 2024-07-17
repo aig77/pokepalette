@@ -1,17 +1,27 @@
 mod sprite;
 mod colorscheme;
-mod rgb;
+mod color;
 mod jsonify;
 mod wal;
+mod distance;
 
 use std::env;
 use std::cmp::Ordering;
 use rand::Rng;
+use color::Rgb;
 use colorscheme::ColorScheme;
 use sprite::Sprite;
 use wal::get_wal_scheme;
 use jsonify::read_sprites_json;
 use jsonify::generate_sprites_json;
+use distance::*;
+
+use std::collections::HashMap;
+// use rgb::Rgb;
+
+const JSON_PATH: &str = "./data/sprites.json";
+const SPRITES_PATH: &str = "./data/pokemon-gen8";
+const WAL_SCHEME_SIZE: usize = 8;
 
 pub struct Flags {
     k: usize,
@@ -64,6 +74,8 @@ impl Flags {
 }
 
 fn main() {
+    
+
     let mut rng = rand::thread_rng();
 
     let args: Vec<String> = env::args().collect();
@@ -72,39 +84,80 @@ fn main() {
 
     let k = flags.k;
 
-    let weights = vec![0.6, 1.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2];
+    // let weights = vec![0.1, 0.6, 1.0, 1.0, 1.0, 1.0, 0.6, 0.2];
+    let weights = vec![0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.1];
 
-    let wal = get_wal_scheme(8);
+    let wal = get_wal_scheme(WAL_SCHEME_SIZE);
 
-    let sprites = match read_sprites_json(&flags) {
+    // generate_sprites_json(SPRITES_PATH, JSON_PATH, WAL_SCHEME_SIZE);
+
+    let sprites = match read_sprites_json(JSON_PATH, &flags) {
         Ok(vec) => vec,
         Err(err) => {
             eprintln!("error reading sprite data from json: {}", err);
             return;
         }
     };
+
+    // let mut scheme_count = HashMap::new();
+
+    // for sprite in &sprites {
+    //     let count = scheme_count.entry(sprite.scheme.len()).or_insert(0);
+    //     *count += 1;
+    // }
+
+    // println!("{:?}", scheme_count);
+
+    // for sprite in &sprites {
+    //     println!("{}", sprite.scheme.len());
+    // }
     
-    let top_k = get_k_nearest_sprites(&wal, &sprites, k, &weights);
+    let top_k_e = get_k_nearest_sprites(&sprites, &wal, k, distance::EuclideanDistanceFn);
+    let top_k_d = get_k_nearest_sprites(&sprites, &wal, k, distance::DE2000DistanceFn);
+    let top_k_m = get_k_nearest_sprites(&sprites, &wal, k, distance::MSSDDistanceFn);
 
     if flags.verbose {
         println!("wal:  {}\n", wal);
+        println!("----------------------------");
+        println!("********** Euclidean **********\n");
 
-        for (dist, sprite) in &top_k {
+        for (dist, sprite) in &top_k_e {
+            println!("{}", sprite);
+            println!("distance: {:.4}\n", dist);
+        }
+
+        println!("********** DE2000 **********\n");
+
+        for (dist, sprite) in &top_k_d {
+            println!("{}", sprite);
+            println!("distance: {:.4}\n", dist);
+        }
+
+        println!("********** MSSD **********\n");
+
+        for (dist, sprite) in &top_k_m {
             println!("{}", sprite);
             println!("distance: {:.4}\n", dist);
         }
     }
-
     let rand = rng.gen_range(0..k);
 
-    println!("{}", top_k[rand].1.name);
+    println!("{}", top_k_e[rand].1.name);
 }
 
-fn get_k_nearest_sprites<'a>(scheme: &ColorScheme, sprites: &'a [Sprite], k: usize, weights: &[f64]) -> Vec<(f64, &'a Sprite)> {
+fn get_k_nearest_sprites<'a, D>(
+    sprites: &'a [Sprite], 
+    scheme: &ColorScheme<Rgb<u8>>, 
+    k: usize, 
+    distance_fn: D,
+) -> Vec<(f64, &'a Sprite)> 
+where 
+    D: distance::DistanceFn<f64> + Clone
+{
     let mut distances: Vec<(f64, &'a Sprite)> = sprites
         .iter()
         .map(|sprite| {
-            let distance = sprite.scheme.euclidean_distance_with_weights(scheme, weights);
+            let distance = distance_fn.scheme_distance(&sprite.scheme, scheme);
             (distance, sprite)
         })
         .collect();

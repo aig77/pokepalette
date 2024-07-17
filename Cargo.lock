@@ -238,6 +238,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
+name = "delta_e"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5e950041d5b0b4f9e55a93a444712bdec8aa3a8f89821379a591d11eb8a3da3"
+dependencies = [
+ "lab 0.7.2",
+]
+
+[[package]]
 name = "dirs"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -470,6 +479,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5d4a7da358eff58addd2877a45865158f0d78c911d43a5784ceb7bbf52833b0"
 
 [[package]]
+name = "lab"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcb6fe1d958d9c2a4298cb5024381522038952ebd0fd3af60d00d3844813c93c"
+
+[[package]]
+name = "lab"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf36173d4167ed999940f804952e6b08197cae5ad5d572eb4db150ce8ad5d58f"
+
+[[package]]
 name = "lebe"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -685,8 +706,10 @@ name = "pokescheme"
 version = "0.1.0"
 dependencies = [
  "color-thief",
+ "delta_e",
  "homedir",
  "image",
+ "lab 0.11.0",
  "rand",
  "serde",
  "serde_json",

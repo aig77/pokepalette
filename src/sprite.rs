@@ -2,13 +2,13 @@ use std::fmt;
 use std::io::Error;
 use std::path::Path;
 use serde::{Serialize, Deserialize};
-
+use crate::color::Rgb;
 use crate::colorscheme::ColorScheme;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sprite {
     pub name: String,
-    pub scheme: ColorScheme,
+    pub scheme: ColorScheme<Rgb<u8>>,
     pub shiny: bool,
     pub female: bool,
     pub mega: bool,
