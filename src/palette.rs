@@ -10,17 +10,17 @@ use crate::color::Rgb;
 use delta_e::*;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ColorScheme<T> {
+pub struct Palette<T> {
     pub colors: Vec<T>
 }
 
-impl<T> ColorScheme<T> {
+impl<T> Palette<T> {
     pub fn new(colors: Vec<T>) -> Self {
-        ColorScheme::<T> { colors }
+        Palette::<T> { colors }
     }
 }
 
-impl ColorScheme<Rgb<u8>> {
+impl Palette<Rgb<u8>> {
     pub fn from_img_path(path: &Path) -> Self {
         let img: DynamicImage = image::open(path).unwrap();
         let img = img.to_rgb8();
@@ -44,14 +44,14 @@ impl ColorScheme<Rgb<u8>> {
             colors.push(last);
         }
 
-        ColorScheme::new(colors)
+        Palette::new(colors)
     }
 
     pub fn len(&self) -> usize {
         self.colors.len()
     }
 
-    pub fn euclidean_distance_with_weights(&self, other: &ColorScheme<Rgb<u8>>, weights: &[f64]) -> f64 {
+    pub fn euclidean_distance_with_weights(&self, other: &Palette<Rgb<u8>>, weights: &[f64]) -> f64 {
         let sum_squared_diff: f64 = self.colors.iter().enumerate()
             .fold(0.0, | acc, (i, self_color) | {
                 let self_norm = self_color.normalize();
@@ -65,19 +65,19 @@ impl ColorScheme<Rgb<u8>> {
             sum_squared_diff.sqrt()
     }
 
-    pub fn euclidean_distance(&self, other: &ColorScheme<Rgb<u8>>) -> f64 {
+    pub fn euclidean_distance(&self, other: &Palette<Rgb<u8>>) -> f64 {
         self.euclidean_distance_with_weights(other, &vec![1.0; self.len()])
     }
 
-    // pub fn to_lab(&self) -> ColorScheme<Lab> {
+    // pub fn to_lab(&self) -> Palette<Lab> {
     //     let mut rgbs = vec![];
     //     for color in &self.colors {
     //         rgbs.push([color.r, color.g, color.b]);
     //     }
-    //     ColorScheme::new(lab::rgbs_to_labs(&rgbs))
+    //     Palette::new(lab::rgbs_to_labs(&rgbs))
     // }
 
-    pub fn de2000_distance(&self, other: &ColorScheme<Rgb<u8>>) -> f64 {
+    pub fn de2000_distance(&self, other: &Palette<Rgb<u8>>) -> f64 {
         let sum = self.colors.iter().enumerate()
             .fold(0.0, |acc, (i, color)| {
                 let other_color = other.colors[i];
@@ -90,7 +90,7 @@ impl ColorScheme<Rgb<u8>> {
     }
 }
 
-impl fmt::Display for ColorScheme<Rgb<u8>> {
+impl fmt::Display for Palette<Rgb<u8>> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut result = String::new();
 
@@ -105,14 +105,14 @@ impl fmt::Display for ColorScheme<Rgb<u8>> {
     }   
 }
 
-// impl ColorScheme<Lab> {
+// impl Palette<Lab> {
 //     pub fn len(&self) -> usize {
 //         self.colors.len()
 //     }
 
-//     pub fn ciede2000_distance(&self, other: &ColorScheme<Lab>) -> f64 {
+//     pub fn ciede2000_distance(&self, other: &Palette<Lab>) -> f64 {
 //         if self.len() != other.len() {
-//             panic!("Schemes must have the same length");
+//             panic!("palettes must have the same length");
 //         }
 
 //         let mut total_distance = 0.0;

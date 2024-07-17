@@ -3,12 +3,12 @@ use std::io::Error;
 use std::path::Path;
 use serde::{Serialize, Deserialize};
 use crate::color::Rgb;
-use crate::colorscheme::ColorScheme;
+use crate::palette::Palette;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sprite {
     pub name: String,
-    pub scheme: ColorScheme<Rgb<u8>>,
+    pub palette: Palette<Rgb<u8>>,
     pub shiny: bool,
     pub female: bool,
     pub mega: bool,
@@ -27,11 +27,11 @@ impl Eq for RegionalVariant {}
 impl Sprite {
     pub fn new(path: &Path) -> Sprite {
         let path_details = PathDetails::new(path);
-        let scheme = ColorScheme::from_img_path(path);
+        let palette = Palette::from_img_path(path);
 
         Sprite {
             name: path_details.name,
-            scheme: scheme,
+            palette: palette,
             shiny: path_details.shiny,
             female: path_details.female,
             mega: path_details.mega,
@@ -44,7 +44,7 @@ impl fmt::Display for Sprite {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", self.name)?;
         writeln!(f, "------------------------")?;
-        writeln!(f, "scheme:   {}", self.scheme)?;
+        writeln!(f, "palette:   {}", self.palette)?;
         writeln!(f, "shiny:    {}", self.shiny)?;
         writeln!(f, "female:   {}", self.female)?;
         writeln!(f, "mega:     {}", self.mega)?;
