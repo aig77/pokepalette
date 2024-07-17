@@ -42,15 +42,15 @@ pub fn generate_sprites_json(sprite_dir: &str, json_name: &str, size: usize) {
     let sprites = get_sprites(Path::new(sprite_dir))
         .expect("error reading sprites");
 
-    // add random color to sprite's colorscheme to pad up to size of wallpaper scheme
+    // add random color to sprite's Palette to pad up to size of wallpaper palette
     // let color_counts = get_color_counts(&sprites);
     // let color_counts_len = color_counts.len();
 
     // for sprite in &mut sprites {
-    //     let scheme = &mut sprite.scheme;
-    //     while scheme.len() < size {
+    //     let palette = &mut sprite.palette;
+    //     while palette.len() < size {
     //         let r = rng.gen_range(0..color_counts_len);
-    //         scheme.colors.push(color_counts[r].0.clone());
+    //         palette.colors.push(color_counts[r].0.clone());
     //     }
     // }
 
@@ -104,7 +104,7 @@ fn get_color_counts(sprites: &Vec<Sprite>) -> Vec<(Rgb<u8>, u32)> {
     let mut colormap: HashMap<Rgb<u8>, u32> = HashMap::new();
 
     for sprite in sprites {
-        for color in &sprite.scheme.colors {
+        for color in &sprite.palette.colors {
             let count = colormap.entry(*color).or_insert(0);
             *count += 1;
         }
@@ -132,7 +132,7 @@ fn get_most_common_colors(color_counts: Vec<(Rgb<u8>, u32)>) -> Vec<(Rgb<u8>, u3
     median_counts
 }
 
-// let sums = self.scheme.iter()
+// let sums = self.palette.iter()
     //     .fold((0, 0, 0), |acc, color| {
     //         (acc.0 + color.r as u32, acc.1 + color.g as u32, acc.2 + color.b as u32)
     //     });
@@ -144,9 +144,9 @@ fn get_most_common_colors(color_counts: Vec<(Rgb<u8>, u32)>) -> Vec<(Rgb<u8>, u3
     // }
 
     // let colors: Vec<Rgb<u8>> = sprites.iter()
-    //     .flat_map(|s| s.scheme.scheme.clone().into_iter())
+    //     .flat_map(|s| s.palette.palette.clone().into_iter())
     //     .collect();
 
     // let total_colors = sprites.clone()
     //     .into_iter()
-    //     .fold(0, |acc, sprite| acc + sprite.scheme.scheme.len());
+    //     .fold(0, |acc, sprite| acc + sprite.palette.palette.len());

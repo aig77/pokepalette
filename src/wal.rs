@@ -2,11 +2,11 @@ use std::fs;
 use homedir::my_home;
 use std::path::{PathBuf, Path};
 use crate::color::Rgb;
-use crate::colorscheme::ColorScheme;
+use crate::palette::Palette;
 
 const WAL_RGB: &str = ".cache/wal/colors-rgb";
 
-pub fn get_wal_scheme(n: usize) -> ColorScheme<Rgb<u8>> {
+pub fn get_wal_palette(n: usize) -> Palette<Rgb<u8>> {
     // try pywal
     match my_home() {
         Ok(buf) => {
@@ -15,7 +15,7 @@ pub fn get_wal_scheme(n: usize) -> ColorScheme<Rgb<u8>> {
                 if wal_path.exists() {
                     match read_first_n_lines(wal_path, n) {
                         Ok(lines) => {
-                            let scheme = lines.iter().filter_map(|line| {
+                            let palette = lines.iter().filter_map(|line| {
                                 let colors: Vec<&str> = line.split(',')
                                     .map(|s| s.trim())
                                     .collect();
@@ -25,7 +25,7 @@ pub fn get_wal_scheme(n: usize) -> ColorScheme<Rgb<u8>> {
                                 Some(Rgb { r, g, b })
                             }).collect();
 
-                            return ColorScheme::new(scheme);
+                            return Palette::new(palette);
                         },
                         Err(_) => println!("error reading pywal file, trying by OS")
                     }
@@ -37,15 +37,15 @@ pub fn get_wal_scheme(n: usize) -> ColorScheme<Rgb<u8>> {
 
     // try os
     match wallpaper::get() {
-        Ok(path) => ColorScheme::from_img_path(Path::new(&path)),
+        Ok(path) => Palette::from_img_path(Path::new(&path)),
         Err(_) => panic!("
-Error getting wallpaper to generate colorscheme. 
-Consider using pywal since it generates a colorscheme for your wallpaper.
+Error getting wallpaper to generate Palette. 
+Consider using pywal since it generates a Palette for your wallpaper.
   * https://github.com/dylanaraps/pywal
   * https://github.com/eylles/pywal16
-Make sure pywal is generating a colors-rgb template for Pokescheme to use.
+Make sure pywal is generating a colors-rgb template for Pokepalette to use.
 
-If installing pywal is not an option, Pokescheme will use the rust wallpaper crate to grab your desktop wallpaper.
+If installing pywal is not an option, Pokepalette will use the rust wallpaper crate to grab your desktop wallpaper.
 Wallpaper supports the following OS:
   * Windows
   * macOS

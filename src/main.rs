@@ -1,5 +1,5 @@
 mod sprite;
-mod colorscheme;
+mod palette;
 mod color;
 mod jsonify;
 mod wal;
@@ -9,9 +9,9 @@ use std::env;
 use std::cmp::Ordering;
 use rand::Rng;
 use color::Rgb;
-use colorscheme::ColorScheme;
+use palette::Palette;
 use sprite::Sprite;
-use wal::get_wal_scheme;
+use wal::get_wal_palette;
 use jsonify::read_sprites_json;
 use jsonify::generate_sprites_json;
 use distance::*;
@@ -21,7 +21,7 @@ use std::collections::HashMap;
 
 const JSON_PATH: &str = "./data/sprites.json";
 const SPRITES_PATH: &str = "./data/pokemon-gen8";
-const WAL_SCHEME_SIZE: usize = 8;
+const WAL_palette_SIZE: usize = 8;
 
 pub struct Flags {
     k: usize,
@@ -87,9 +87,9 @@ fn main() {
     // let weights = vec![0.1, 0.6, 1.0, 1.0, 1.0, 1.0, 0.6, 0.2];
     let weights = vec![0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.1];
 
-    let wal = get_wal_scheme(WAL_SCHEME_SIZE);
+    let wal = get_wal_palette(WAL_palette_SIZE);
 
-    // generate_sprites_json(SPRITES_PATH, JSON_PATH, WAL_SCHEME_SIZE);
+    generate_sprites_json(SPRITES_PATH, JSON_PATH, WAL_palette_SIZE);
 
     let sprites = match read_sprites_json(JSON_PATH, &flags) {
         Ok(vec) => vec,
@@ -99,17 +99,17 @@ fn main() {
         }
     };
 
-    // let mut scheme_count = HashMap::new();
+    // let mut palette_count = HashMap::new();
 
     // for sprite in &sprites {
-    //     let count = scheme_count.entry(sprite.scheme.len()).or_insert(0);
+    //     let count = palette_count.entry(sprite.palette.len()).or_insert(0);
     //     *count += 1;
     // }
 
-    // println!("{:?}", scheme_count);
+    // println!("{:?}", palette_count);
 
     // for sprite in &sprites {
-    //     println!("{}", sprite.scheme.len());
+    //     println!("{}", sprite.palette.len());
     // }
     
     let top_k_e = get_k_nearest_sprites(&sprites, &wal, k, distance::EuclideanDistanceFn);
@@ -147,7 +147,7 @@ fn main() {
 
 fn get_k_nearest_sprites<'a, D>(
     sprites: &'a [Sprite], 
-    scheme: &ColorScheme<Rgb<u8>>, 
+    palette: &Palette<Rgb<u8>>, 
     k: usize, 
     distance_fn: D,
 ) -> Vec<(f64, &'a Sprite)> 
@@ -157,7 +157,7 @@ where
     let mut distances: Vec<(f64, &'a Sprite)> = sprites
         .iter()
         .map(|sprite| {
-            let distance = distance_fn.scheme_distance(&sprite.scheme, scheme);
+            let distance = distance_fn.palette_distance(&sprite.palette, palette);
             (distance, sprite)
         })
         .collect();

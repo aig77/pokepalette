@@ -1,11 +1,11 @@
 use crate::color::Rgb;
-use crate::colorscheme::ColorScheme;
+use crate::palette::Palette;
 use delta_e::*;
 
 
 pub trait DistanceFn<T> {
     fn color_distance(&self, color1: &Rgb<u8>, color2: &Rgb<u8>) -> T;
-    fn scheme_distance(&self, scheme1: &ColorScheme<Rgb<u8>>, scheme2: &ColorScheme<Rgb<u8>>) -> T;
+    fn palette_distance(&self, palette1: &Palette<Rgb<u8>>, palette2: &Palette<Rgb<u8>>) -> T;
 }
 
 #[derive(Clone)]
@@ -20,14 +20,14 @@ impl DistanceFn<f64> for EuclideanDistanceFn {
         diff_r + diff_g + diff_b
     }
 
-    fn scheme_distance(&self, scheme1: &ColorScheme<Rgb<u8>>, scheme2: &ColorScheme<Rgb<u8>>) -> f64 {
-        if scheme1.len() != scheme2.len() {
-            panic!("color schemes must be the same length");
+    fn palette_distance(&self, palette1: &Palette<Rgb<u8>>, palette2: &Palette<Rgb<u8>>) -> f64 {
+        if palette1.len() != palette2.len() {
+            panic!("color palettes must be the same length");
         }
 
-        let sum_squared_diff: f64 = scheme1.colors.iter().enumerate()
+        let sum_squared_diff: f64 = palette1.colors.iter().enumerate()
             .fold(0.0, | acc, (i, color1) | {
-                let diff = self.color_distance(color1, &scheme2.colors[i]);
+                let diff = self.color_distance(color1, &palette2.colors[i]);
                 acc + diff
             });
 
@@ -46,18 +46,18 @@ impl DistanceFn<f64> for DE2000DistanceFn {
         DE2000::from_rgb(a, b) as f64
     }
 
-    fn scheme_distance(&self, scheme1: &ColorScheme<Rgb<u8>>, scheme2: &ColorScheme<Rgb<u8>>) -> f64 {
-        if scheme1.len() != scheme2.len() {
-            panic!("colorschemes must be the same length");
+    fn palette_distance(&self, palette1: &Palette<Rgb<u8>>, palette2: &Palette<Rgb<u8>>) -> f64 {
+        if palette1.len() != palette2.len() {
+            panic!("Palettes must be the same length");
         }
 
-        let sum = scheme1.colors.iter().enumerate()
+        let sum = palette1.colors.iter().enumerate()
             .fold(0.0, |acc, (i, color1)| {
-                let color2 = scheme2.colors[i];
+                let color2 = palette2.colors[i];
                 acc + DE2000::from_rgb(&[color1.r, color1.b, color1.g], &[color2.r, color2.g, color2.b]) as f64
             });
 
-        sum / scheme1.len() as f64
+        sum / palette1.len() as f64
     }
 }
 
@@ -68,19 +68,19 @@ impl DistanceFn<f64> for MSSDDistanceFn {
         0.0
     }
 
-    fn scheme_distance(&self, scheme1: &ColorScheme<Rgb<u8>>, scheme2: &ColorScheme<Rgb<u8>>) -> f64 {
-        let n = scheme1.len();
-        let m = scheme2.len();
+    fn palette_distance(&self, palette1: &Palette<Rgb<u8>>, palette2: &Palette<Rgb<u8>>) -> f64 {
+        let n = palette1.len();
+        let m = palette2.len();
 
         // if n != m {
-        //     panic!("color schemes must be the same length");
+        //     panic!("color palettes must be the same length");
         // }
 
         // let dist_matrix = vec![vec![0.0; m+1]; n+1];
 
-        let dist_matrix: Vec<Vec<f64>> = scheme1.colors.iter()
+        let dist_matrix: Vec<Vec<f64>> = palette1.colors.iter()
             .map(|color1| {
-                scheme2.colors.iter()
+                palette2.colors.iter()
                     .map(|color2| {
                         DE2000DistanceFn.color_distance(color1, color2)
                 }).collect()
@@ -107,22 +107,22 @@ impl DistanceFn<f64> for MSSDDistanceFn {
     }
 }
 
-// pub fn mssd<D>(scheme1: &ColorScheme<Rgb<u8>>, scheme2: &ColorScheme<Rgb<u8>>, distance_fn: D) -> (f64, (usize, usize))
+// pub fn mssd<D>(palette1: &Palette<Rgb<u8>>, palette2: &Palette<Rgb<u8>>, distance_fn: D) -> (f64, (usize, usize))
 // where 
 //     D: DistanceFn<f64> + Clone
 // {
-//     let n = scheme1.len();
-//     let m = scheme2.len();
+//     let n = palette1.len();
+//     let m = palette2.len();
 
 //     // if n != m {
-//     //     panic!("color schemes must be the same length");
+//     //     panic!("color palettes must be the same length");
 //     // }
 
 //     // let dist_matrix = vec![vec![0.0; m+1]; n+1];
 
-//     let dist_matrix: Vec<Vec<f64>> = scheme1.colors.iter()
+//     let dist_matrix: Vec<Vec<f64>> = palette1.colors.iter()
 //         .map(|color1| {
-//             scheme2.colors.iter()
+//             palette2.colors.iter()
 //                 .map(|color2| {
 //                     distance_fn.color_distance(color1, color2)
 //             }).collect()
