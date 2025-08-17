@@ -1,0 +1,94 @@
+use std::env;
+use std::fs;
+use std::path::PathBuf;
+use regex::Regex;
+use std::collections::HashMap;
+use lab::Lab;
+
+const PROJECT_ROOT: &str = env!("CARGO_MANIFEST_DIR");
+
+struct FileInfo {
+    path: PathBuf,
+    name: String,
+    shiny: bool
+}
+
+fn main() {
+    let ignore_black = true;
+    let regular = PathBuf::from(PROJECT_ROOT).join("assets/colorscripts/regular");
+    let shiny = PathBuf::from(PROJECT_ROOT).join("assets/colorscripts/shiny");
+    
+    let mut files = Vec::new();
+
+    for entry in fs::read_dir(&regular) {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+            files.push( FileInfo { 
+                path: path, 
+                name: filename.to_string(), 
+                shiny: false
+            });
+        }
+    }
+
+    for entry in fs::read_dir(&shiny) {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+            files.push( FileInfo { 
+                path: path, 
+                name: filename.to_string(), 
+                shiny: true 
+            });
+        }
+    }
+
+    for file in files {
+        let contents = fs::read_to_string(file.path)
+            .expect("Should have been able to read the file");
+        println!("{contents}");
+
+        let colors = extract_colors(&contents);
+        let top_colors = get_top_colors(&colors, 5, ignore_black);
+        for (color, count) in top_colors {
+            print_color_preview(color);
+            println!("RGB: {:>3}, {:>3}, {:>3}. Count: {}", color[0], color[1], color[2], count);
+        }
+    }
+}
+
+fn extract_colors(content: &str) -> Vec<[u8; 3]> {
+    let re = Regex::new(r"\[(?:38|48);2;(\d+);(\d+);(\d+)m").unwrap();
+ 
+    re.captures_iter(content)
+        .map(|cap| {
+            let r = cap[1].parse::<u8>().unwrap();
+            let g = cap[2].parse::<u8>().unwrap();
+            let b = cap[3].parse::<u8>().unwrap();
+            [r, g, b]
+        })
+        .collect()
+}
+
+fn get_top_colors(colors: &Vec<[u8; 3]>, top_n: usize, ignore_black: bool) -> Vec<([u8; 3], usize)> {
+    let mut color_counts = HashMap::new();
+
+    for color in colors {
+        *color_counts.entry(*color).or_insert(0) += 1;
+    }
+
+    let mut sorted: Vec<_> = color_counts.into_iter().collect();
+    sorted.sort_by(|a, b| b.1.cmp(&a.1));
+
+    if ignore_black {
+        sorted.retain(|&(x, _)| x != [0, 0, 0]);
+    }
+
+    sorted.into_iter().take(top_n).collect()
+}
+
+fn print_color_preview(color: [u8; 3]) {
+    print!("\x1b[48;2;{};{};{}m   \x1b[0m ", color[0], color[1], color[2]);
+}
+
