@@ -1,121 +1,136 @@
+use regex::Regex;
+use serde::Serialize;
+use std::collections::HashMap;
 use std::fmt;
-use std::io::Error;
-use std::path::Path;
-use serde::{Serialize, Deserialize};
-use crate::color::Rgb;
-use crate::palette::Palette;
+use std::fs;
+use std::path::PathBuf;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Sprite {
-    pub name: String,
-    pub palette: Palette<Rgb<u8>>,
-    pub shiny: bool,
-    pub female: bool,
-    pub mega: bool,
-    pub regional_variant: RegionalVariant
+#[derive(Serialize)]
+pub struct ColorRank {
+    color: [u8; 3],
+    count: usize,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Serialize, Deserialize)]
-pub enum RegionalVariant {
-    Regular,
-    Alola,
-    Galar
-}
-
-impl Eq for RegionalVariant {}
-
-impl Sprite {
-    pub fn new(path: &Path) -> Sprite {
-        let path_details = PathDetails::new(path);
-        let palette = Palette::from_img_path(path);
-
-        Sprite {
-            name: path_details.name,
-            palette: palette,
-            shiny: path_details.shiny,
-            female: path_details.female,
-            mega: path_details.mega,
-            regional_variant: path_details.regional_variant,
-        }
-    }
-}
-
-impl fmt::Display for Sprite {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "{}", self.name)?;
-        writeln!(f, "------------------------")?;
-        writeln!(f, "palette:   {}", self.palette)?;
-        writeln!(f, "shiny:    {}", self.shiny)?;
-        writeln!(f, "female:   {}", self.female)?;
-        writeln!(f, "mega:     {}", self.mega)?;
-        write!(f, "variant:  {:?}", self.regional_variant)?;
-        Ok(())
-    }   
-}
-
-struct PathDetails {
+#[derive(Serialize)]
+pub struct RankedSprite {
     name: String,
     shiny: bool,
-    female: bool,
     mega: bool,
-    regional_variant: RegionalVariant
+    gmax: bool,
+    region: Option<String>,
+    top_colors: Vec<ColorRank>,
 }
 
-impl PathDetails {
-    fn new(path: &Path) -> PathDetails {        
-        let name = get_name_from_file_stem(path)
-            .expect("unable to get name from file stem in path");
-    
-        let shiny: bool = match path.to_str() {
-            Some(path_str) => path_str.contains("shiny"),
-            _ => false
-        };
-    
-        let female: bool = match path.to_str() {
-            Some(path_str) => path_str.contains("female"),
-            _ => false
+impl RankedSprite {
+    pub fn new(path: PathBuf, top_n: usize, ignore_black: bool) -> Self {
+        let name = path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .expect("No filename found")
+            .to_string();
+
+        let path_str = path.to_string_lossy();
+
+        let shiny = path_str.contains("shiny");
+
+        let mega = path_str.ends_with("mega")
+            || path_str.ends_with("mega-x")
+            || path_str.ends_with("mega-y")
+            || path_str.ends_with("primal");
+
+        let gmax = path_str.ends_with("gmax");
+
+        let region = match path_str {
+            s if s.ends_with("alola") => Some("alola".to_string()),
+            s if s.ends_with("galar") => Some("galar".to_string()),
+            s if s.ends_with("hisui") => Some("hisui".to_string()),
+            _ => None,
         };
 
-        let mega: bool = match path.to_str() {
-            Some(path_str) => path_str.contains("mega"),
-            _ => false,
-        };
-    
-        let regional_variant: RegionalVariant = match path.to_str() {
-            Some(path_str) if path_str.contains("alola") => RegionalVariant::Alola,
-            Some(path_str) if path_str.contains("galar") => RegionalVariant::Galar,
-            _ => RegionalVariant::Regular
-        };
-    
-        PathDetails {
+        let contents = fs::read_to_string(&path).expect("Should have been able to read the file");
+
+        let colors = extract_colors(&contents);
+        let top_colors = get_top_colors(&colors, top_n, ignore_black);
+
+        RankedSprite {
             name,
             shiny,
-            female,
             mega,
-            regional_variant
+            gmax,
+            region,
+            top_colors,
         }
     }
 }
 
-fn get_name_from_file_stem(path: &Path) -> Result<String, Error> {
-    let file_stem = path
-        .file_stem()
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "invalid path"))?;
+impl fmt::Display for RankedSprite {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Pokemon: {}", self.name)?;
 
-    let file_name_str = file_stem.to_str()
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "filename is not valid UTF-8"))?;
-
-    fn capitalize_first_letter(s: &str) -> String {
-        if let Some(c) = s.chars().next() {
-            c.to_uppercase().chain(s.chars().skip(1)).collect()
-        } else {
-            String::new()
+        if self.shiny {
+            writeln!(f, "  Shiny variant")?;
         }
+        if self.mega {
+            writeln!(f, "  Mega evolution")?;
+        }
+        if self.gmax {
+            writeln!(f, "  Gigantamax form")?;
+        }
+        if let Some(region) = &self.region {
+            writeln!(f, "  {} variant", region)?;
+        }
+
+        writeln!(f, "  Top Colors:")?;
+        for (i, color_rank) in self.top_colors.iter().enumerate() {
+            writeln!(
+                f,
+                "    {}. \x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3}) - {} pixels",
+                i + 1,
+                color_rank.color[0],
+                color_rank.color[1],
+                color_rank.color[2],
+                color_rank.color[0],
+                color_rank.color[1],
+                color_rank.color[2],
+                color_rank.count
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
+fn extract_colors(content: &str) -> Vec<[u8; 3]> {
+    let re = Regex::new(r"\[(?:38|48);2;(\d+);(\d+);(\d+)m").unwrap();
+
+    re.captures_iter(content)
+        .map(|cap| {
+            let r = cap[1].parse::<u8>().unwrap();
+            let g = cap[2].parse::<u8>().unwrap();
+            let b = cap[3].parse::<u8>().unwrap();
+            [r, g, b]
+        })
+        .collect()
+}
+
+fn get_top_colors(colors: &[[u8; 3]], top_n: usize, ignore_black: bool) -> Vec<ColorRank> {
+    let mut color_counts = HashMap::new();
+
+    for color in colors {
+        *color_counts.entry(*color).or_insert(0) += 1;
     }
 
-    let formatted: Vec<String> = file_name_str.split('-')
-        .map(|s| capitalize_first_letter(s))
-        .collect();
+    let mut sorted: Vec<_> = color_counts.into_iter().collect();
+    sorted.sort_by(|a, b| b.1.cmp(&a.1));
 
-    Ok(formatted.join("-"))
+    if ignore_black {
+        sorted.retain(|&(x, _)| x != [0, 0, 0]);
+    }
+
+    sorted
+        .into_iter()
+        .take(top_n)
+        .map(|(color, count)| ColorRank { color, count })
+        .collect()
 }
