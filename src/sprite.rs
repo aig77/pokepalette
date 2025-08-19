@@ -1,17 +1,17 @@
 use regex::Regex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::path::PathBuf;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ColorRank {
     color: [u8; 3],
     count: usize,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct RankedSprite {
     name: String,
     shiny: bool,
