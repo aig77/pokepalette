@@ -1,4 +1,4 @@
-use pokepalette::sprite::RankedSprite;
+use pokepalette::sprite::Sprite;
 
 use std::env;
 use std::fs;
@@ -9,9 +9,9 @@ const OUTPUT_FILE_PATH: &str = "assets/pokemon.json";
 
 fn main() -> std::io::Result<()> {
     let verbose = true;
-    let mut sprites: Vec<RankedSprite> = Vec::new();
+    let mut sprites: Vec<Sprite> = Vec::new();
 
-    let top_n = 5;
+    let palette_size = 5;
     let ignore_black = true;
 
     let regular = PathBuf::from(PROJECT_ROOT).join("assets/colorscripts/regular");
@@ -23,7 +23,7 @@ fn main() -> std::io::Result<()> {
         let entry = entry.unwrap();
         let path = entry.path();
 
-        let sprite = RankedSprite::new(path, top_n, ignore_black);
+        let sprite = Sprite::new(path, palette_size, ignore_black);
 
         if verbose {
             println!("{sprite}");
