@@ -29,20 +29,15 @@ pub fn get_palette(
         panic!("cannot generate palette from empty pixel array");
     }
 
-    let mut color_counts = HashMap::new();
+    let bucket_size = (256 / levels) as u8;
+
+    let mut quantized_counts = HashMap::new();
     for pixel in pixels {
         if ignore_black && *pixel == [0, 0, 0] {
             continue;
         }
-        *color_counts.entry(*pixel).or_insert(0) += 1
-    }
-
-    let bucket_size = (256 / levels) as u8;
-
-    let mut quantized_counts = HashMap::new();
-    for (color, count) in color_counts.iter() {
-        let qcolor = quantize_color(color, bucket_size);
-        *quantized_counts.entry(qcolor).or_insert(0) += count;
+        let qcolor = quantize_color(pixel, bucket_size);
+        *quantized_counts.entry(qcolor).or_insert(0) += 1;
     }
 
     let mut sorted: Vec<_> = quantized_counts.into_iter().collect();
