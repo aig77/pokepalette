@@ -1,28 +1,22 @@
+use crate::quantize::get_palette;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
-pub struct ColorRank {
-    color: [u8; 3],
-    count: usize,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RankedSprite {
+pub struct Sprite {
     name: String,
     shiny: bool,
     mega: bool,
     gmax: bool,
     region: Option<String>,
-    top_colors: Vec<ColorRank>,
+    palette: Vec<[u8; 3]>,
 }
 
-impl RankedSprite {
-    pub fn new(path: PathBuf, top_n: usize, ignore_black: bool) -> Self {
+impl Sprite {
+    pub fn new(path: PathBuf, palette_size: usize, ignore_black: bool) -> Self {
         let name = path
             .file_name()
             .unwrap()
@@ -51,20 +45,20 @@ impl RankedSprite {
         let contents = fs::read_to_string(&path).expect("Should have been able to read the file");
 
         let colors = extract_colors(&contents);
-        let top_colors = get_top_colors(&colors, top_n, ignore_black);
+        let palette = get_palette(&colors, 4, ignore_black, palette_size);
 
-        RankedSprite {
+        Sprite {
             name,
             shiny,
             mega,
             gmax,
             region,
-            top_colors,
+            palette,
         }
     }
 }
 
-impl fmt::Display for RankedSprite {
+impl fmt::Display for Sprite {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Pokemon: {}", self.name)?;
 
@@ -82,18 +76,17 @@ impl fmt::Display for RankedSprite {
         }
 
         writeln!(f, "  Top Colors:")?;
-        for (i, color_rank) in self.top_colors.iter().enumerate() {
+        for (i, color) in self.palette.iter().enumerate() {
             writeln!(
                 f,
-                "    {}. \x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3}) - {} pixels",
+                "    {}. \x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3})",
                 i + 1,
-                color_rank.color[0],
-                color_rank.color[1],
-                color_rank.color[2],
-                color_rank.color[0],
-                color_rank.color[1],
-                color_rank.color[2],
-                color_rank.count
+                color[0],
+                color[1],
+                color[2],
+                color[0],
+                color[1],
+                color[2],
             )?;
         }
 
@@ -111,26 +104,5 @@ fn extract_colors(content: &str) -> Vec<[u8; 3]> {
             let b = cap[3].parse::<u8>().unwrap();
             [r, g, b]
         })
-        .collect()
-}
-
-fn get_top_colors(colors: &[[u8; 3]], top_n: usize, ignore_black: bool) -> Vec<ColorRank> {
-    let mut color_counts = HashMap::new();
-
-    for color in colors {
-        *color_counts.entry(*color).or_insert(0) += 1;
-    }
-
-    let mut sorted: Vec<_> = color_counts.into_iter().collect();
-    sorted.sort_by(|a, b| b.1.cmp(&a.1));
-
-    if ignore_black {
-        sorted.retain(|&(x, _)| x != [0, 0, 0]);
-    }
-
-    sorted
-        .into_iter()
-        .take(top_n)
-        .map(|(color, count)| ColorRank { color, count })
         .collect()
 }
