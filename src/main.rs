@@ -4,6 +4,11 @@ mod sprite;
 #[allow(dead_code)]
 mod quantize;
 
+#[allow(dead_code)]
+mod distance;
+
+use pokepalette::{DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE};
+
 use image;
 use image::Pixel;
 use serde_json;
@@ -30,7 +35,12 @@ fn main() {
         })
         .collect();
 
-    let palette = quantize::get_palette(&colors, 5, 4, true);
+    let palette = quantize::get_palette(
+        &colors,
+        DEFAULT_PALETTE_SIZE,
+        DEFAULT_LEVELS,
+        DEFAULT_IGNORE_BLACK,
+    );
 
     for weighted_color in palette {
         println!(

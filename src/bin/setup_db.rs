@@ -1,4 +1,5 @@
 use pokepalette::sprite::Sprite;
+use pokepalette::{DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE};
 
 use std::env;
 use std::fs;
@@ -11,10 +12,6 @@ fn main() -> std::io::Result<()> {
     let verbose = true;
     let mut sprites: Vec<Sprite> = Vec::new();
 
-    let palette_size = 5;
-    let levels = 4;
-    let ignore_black = true;
-
     let regular = PathBuf::from(PROJECT_ROOT).join("assets/colorscripts/regular");
     let shiny = PathBuf::from(PROJECT_ROOT).join("assets/colorscripts/shiny");
 
@@ -24,7 +21,12 @@ fn main() -> std::io::Result<()> {
         let entry = entry.unwrap();
         let path = entry.path();
 
-        let sprite = Sprite::new(path, palette_size, levels, ignore_black);
+        let sprite = Sprite::new(
+            path,
+            DEFAULT_PALETTE_SIZE,
+            DEFAULT_LEVELS,
+            DEFAULT_IGNORE_BLACK,
+        );
 
         if verbose {
             println!("{sprite}");
