@@ -1,4 +1,4 @@
-use crate::quantize::get_palette;
+use crate::quantize::{get_palette, WeightedColor};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -12,11 +12,11 @@ pub struct Sprite {
     mega: bool,
     gmax: bool,
     region: Option<String>,
-    palette: Vec<[u8; 3]>,
+    palette: Vec<WeightedColor>,
 }
 
 impl Sprite {
-    pub fn new(path: PathBuf, palette_size: usize, ignore_black: bool) -> Self {
+    pub fn new(path: PathBuf, palette_size: usize, levels: usize, ignore_black: bool) -> Self {
         let name = path
             .file_name()
             .unwrap()
@@ -45,7 +45,7 @@ impl Sprite {
         let contents = fs::read_to_string(&path).expect("Should have been able to read the file");
 
         let colors = extract_colors(&contents);
-        let palette = get_palette(&colors, 4, ignore_black, palette_size);
+        let palette = get_palette(&colors, palette_size, levels, ignore_black);
 
         Sprite {
             name,
@@ -76,17 +76,18 @@ impl fmt::Display for Sprite {
         }
 
         writeln!(f, "  Top Colors:")?;
-        for (i, color) in self.palette.iter().enumerate() {
+        for (i, weighted_color) in self.palette.iter().enumerate() {
             writeln!(
                 f,
-                "    {}. \x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3})",
+                "    {}. \x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3}). Freq: {}",
                 i + 1,
-                color[0],
-                color[1],
-                color[2],
-                color[0],
-                color[1],
-                color[2],
+                weighted_color.color[0],
+                weighted_color.color[1],
+                weighted_color.color[2],
+                weighted_color.color[0],
+                weighted_color.color[1],
+                weighted_color.color[2],
+                weighted_color.freq,
             )?;
         }
 

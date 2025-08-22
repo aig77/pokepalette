@@ -10,17 +10,13 @@ use serde_json;
 use sprite::Sprite;
 use std::fs;
 
-const DB_PATH: &str = "assets/pokemon.json";
+const DB_PATH: &str = "pokemon.json";
 
 fn main() {
     let file = fs::File::open(DB_PATH).expect("Failed to open pokemon.json");
 
     let _sprites: Vec<Sprite> =
         serde_json::from_reader(file).expect("Failed to parse pokemon.json");
-
-    // for sprite in sprites {
-    // println!("{}", sprite);
-    // }
 
     let image_path_str = "pikachu.png";
     let rgb = image::open(image_path_str).unwrap().to_rgb8();
@@ -34,12 +30,18 @@ fn main() {
         })
         .collect();
 
-    let palette = quantize::get_palette(&colors, 4, true, 5);
+    let palette = quantize::get_palette(&colors, 5, 4, true);
 
-    for color in &palette {
+    for weighted_color in palette {
         println!(
-            "\x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3})",
-            color[0], color[1], color[2], color[0], color[1], color[2]
+            "\x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3}). Freq: {}",
+            weighted_color.color[0],
+            weighted_color.color[1],
+            weighted_color.color[2],
+            weighted_color.color[0],
+            weighted_color.color[1],
+            weighted_color.color[2],
+            weighted_color.freq,
         );
     }
 }
