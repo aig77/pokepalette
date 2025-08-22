@@ -11,24 +11,20 @@ Pokepalette tries to find your desktop wallpaper using two methods:
 
 ### Flags
 
-| Option          | Description                                                                                       |
-|-----------------|---------------------------------------------------------------------------------------------------|
-| `-k`            | The k nearest sprites to your desktop's Palette.                                               |
-| `--no-shiny`    | Removes shiny sprites from the query.                                                              |
-| `--no-mega`     | Removes mega sprites from the query.                                                               |
-| `--no-regional` | Removes regional variant sprites from the query.                                                   |
+| Option          | Description                                                                                                                |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `-k`            | The k nearest sprites to your desktop's Palette.                                                                           |
+| `--no-shiny`    | Removes shiny sprites from the query.                                                                                      |
+| `--no-mega`     | Removes mega sprites from the query.                                                                                       |
+| `--no-regional` | Removes regional variant sprites from the query.                                                                           |
 | `--verbose`     | Prints the current wallpaper Palette and the other k sprites' Palettes including their distances to the wallpaper palette. |
-
-
-
 
 ### Enhancements
 
-1. Improve palette generation for more accurate results. By default, pokepalette generates a palette using 
-8 colors (due to them being grabbed from pywal). Some sprites don't have enough colors to create a palette
-with 8 dominant colors. To correct this, I used the naive approach of padding color palettes. This could be improved
-in many ways. Will have to do some research and see. 
+1. Improve palette generation for more accurate results. By default, pokepalette generates a palette using
+   8 colors (due to them being grabbed from pywal). Some sprites don't have enough colors to create a palette
+   with 8 dominant colors. To correct this, I used the naive approach of padding color palettes. This could be improved
+   in many ways. Will have to do some research and see.
 2. Use command line argument library to fix some cli bugs
 3. Add a feature to create a palette from any image
 4. Add custom errors for clearer err messages
-
