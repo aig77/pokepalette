@@ -7,12 +7,12 @@ use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
 pub struct Sprite {
-    name: String,
-    shiny: bool,
-    mega: bool,
-    gmax: bool,
-    region: Option<String>,
-    palette: Vec<WeightedColor>,
+    pub name: String,
+    pub shiny: bool,
+    pub mega: bool,
+    pub gmax: bool,
+    pub region: Option<String>,
+    pub palette: Vec<WeightedColor>,
 }
 
 impl Sprite {
