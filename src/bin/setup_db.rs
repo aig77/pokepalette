@@ -5,13 +5,14 @@ use std::fs;
 use std::path::PathBuf;
 
 const PROJECT_ROOT: &str = env!("CARGO_MANIFEST_DIR");
-const OUTPUT_FILE_PATH: &str = "assets/pokemon.json";
+const OUTPUT_FILE_PATH: &str = "pokemon.json";
 
 fn main() -> std::io::Result<()> {
     let verbose = true;
     let mut sprites: Vec<Sprite> = Vec::new();
 
     let palette_size = 5;
+    let levels = 4;
     let ignore_black = true;
 
     let regular = PathBuf::from(PROJECT_ROOT).join("assets/colorscripts/regular");
@@ -23,7 +24,7 @@ fn main() -> std::io::Result<()> {
         let entry = entry.unwrap();
         let path = entry.path();
 
-        let sprite = Sprite::new(path, palette_size, ignore_black);
+        let sprite = Sprite::new(path, palette_size, levels, ignore_black);
 
         if verbose {
             println!("{sprite}");

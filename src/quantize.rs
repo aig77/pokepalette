@@ -1,11 +1,18 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[derive(Serialize, Deserialize)]
+pub struct WeightedColor {
+    pub color: [u8; 3],
+    pub freq: f32,
+}
 
 pub fn get_palette(
     pixels: &Vec<[u8; 3]>,
+    palette_size: usize,
     levels: usize,
     ignore_black: bool,
-    palette_size: usize,
-) -> Vec<[u8; 3]> {
+) -> Vec<WeightedColor> {
     // Sensible ranges
     if levels < 2 || levels > 16 {
         panic!("levels must be between 2 and 16");
@@ -46,7 +53,10 @@ pub fn get_palette(
     sorted
         .into_iter()
         .take(palette_size)
-        .map(|(color, _)| color)
+        .map(|(color, count)| WeightedColor {
+            color: color,
+            freq: count as f32 / pixels.len() as f32,
+        })
         .collect()
 }
 
