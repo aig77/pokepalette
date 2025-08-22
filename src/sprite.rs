@@ -1,4 +1,7 @@
+#![allow(dead_code)]
+
 use crate::quantize::{get_palette, WeightedColor};
+use anyhow::Result;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -15,8 +18,16 @@ pub struct Sprite {
     pub palette: Vec<WeightedColor>,
 }
 
+#[derive(Debug)]
+enum SpriteError {}
+
 impl Sprite {
-    pub fn new(path: PathBuf, palette_size: usize, levels: usize, ignore_black: bool) -> Self {
+    pub fn new(
+        path: PathBuf,
+        palette_size: usize,
+        levels: usize,
+        ignore_black: bool,
+    ) -> Result<Self> {
         let name = path
             .file_name()
             .unwrap()
@@ -44,17 +55,17 @@ impl Sprite {
 
         let contents = fs::read_to_string(&path).expect("Should have been able to read the file");
 
-        let colors = extract_colors(&contents);
+        let colors = extract_colors(&contents)?;
         let palette = get_palette(&colors, palette_size, levels, ignore_black);
 
-        Sprite {
+        Ok(Sprite {
             name,
             shiny,
             mega,
             gmax,
             region,
             palette,
-        }
+        })
     }
 }
 
@@ -95,15 +106,15 @@ impl fmt::Display for Sprite {
     }
 }
 
-fn extract_colors(content: &str) -> Vec<[u8; 3]> {
-    let re = Regex::new(r"\[(?:38|48);2;(\d+);(\d+);(\d+)m").unwrap();
+fn extract_colors(content: &str) -> Result<Vec<[u8; 3]>> {
+    let re = Regex::new(r"\[(?:38|48);2;(\d+);(\d+);(\d+)m")?;
 
     re.captures_iter(content)
         .map(|cap| {
-            let r = cap[1].parse::<u8>().unwrap();
-            let g = cap[2].parse::<u8>().unwrap();
-            let b = cap[3].parse::<u8>().unwrap();
-            [r, g, b]
+            let r = cap[1].parse::<u8>()?;
+            let g = cap[2].parse::<u8>()?;
+            let b = cap[3].parse::<u8>()?;
+            Ok([r, g, b])
         })
         .collect()
 }

@@ -599,6 +599,7 @@ dependencies = [
 name = "pokepalette"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "image",
  "lab",
  "regex",
