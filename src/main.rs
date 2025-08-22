@@ -2,7 +2,9 @@ mod distance;
 mod quantize;
 mod sprite;
 
-use pokepalette::{DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE, DEFAULT_TOP_K};
+use pokepalette::{
+    DB_PATH, DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE, DEFAULT_TOP_K,
+};
 
 use anyhow::Result;
 use clap::Parser;
@@ -12,8 +14,6 @@ use quantize::{get_palette, WeightedColor};
 use serde_json;
 use sprite::Sprite;
 use std::fs;
-
-const DB_PATH: &str = "pokemon.json";
 
 /// Match pokemon color palettes to your images
 #[derive(Parser, Debug)]
