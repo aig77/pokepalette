@@ -1,11 +1,6 @@
-#[allow(dead_code)]
-mod sprite;
-
-#[allow(dead_code)]
-mod quantize;
-
-#[allow(dead_code)]
 mod distance;
+mod quantize;
+mod sprite;
 
 use pokepalette::{DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE};
 
@@ -56,6 +51,8 @@ fn main() {
         );
     }
 
+    println!("");
+
     let mut distances: Vec<(Sprite, f32)> = sprites
         .into_iter()
         .map(|sprite| {
@@ -69,6 +66,6 @@ fn main() {
     let top: Vec<_> = distances.into_iter().take(top_k).collect();
 
     for (sprite, distance) in top {
-        println!("{} {}\n", sprite, distance);
+        println!("{}\nScore: {}\n", sprite, distance);
     }
 }
