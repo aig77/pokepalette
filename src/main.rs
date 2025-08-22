@@ -48,6 +48,7 @@ fn main() -> Result<()> {
     // Get top k
     let top: Vec<(&Sprite, f32)> = ranked.into_iter().take(args.top_k).collect();
 
+    // Print results
     if args.verbose {
         print_image_information(image_palette);
         print_top_information(&top);
