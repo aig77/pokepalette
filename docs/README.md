@@ -78,4 +78,4 @@ Pokemon data sourced from [krabby](https://github.com/yannjor/krabby). This is a
 
 ---
 
-**Made with 🦀 Rust - because even Pokemon deserve memory safety!**
+_Made with 🦀 Rust - because even Pokemon deserve memory safety!_
