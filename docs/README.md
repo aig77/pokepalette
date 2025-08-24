@@ -76,6 +76,10 @@ Feel free to open issues or PRs!
 
 Pokemon data sourced from [krabby](https://github.com/yannjor/krabby). This is an awesome project, check it out!
 
+### License
+
+This project is licensed under the [MIT License](../LICENSE)
+
 ---
 
 _Made with 🦀 Rust - because even Pokemon deserve memory safety!_
