@@ -51,11 +51,9 @@ pokepalette -i landscape.png -t 20
 
 The tool uses several computer vision and color theory techniques to find accurate matches:
 
-**Color Quantization**: Extracts dominant colors from your image using uniform quantization
-**LAB Color Space**: Converts colors to LAB space for perceptually uniform color comparisons
-**Euclidean Distance**: Calculates color similarity using euclidean distance in LAB space
-
-This approach provides much better results than simple RGB comparisons since it accounts for how humans actually perceive color differences!
+**Color Quantization**: Extracts dominant colors from your image using uniform quantization <br>
+**LAB Color Space**: Converts colors to LAB space for perceptually uniform color comparisons <br>
+**Euclidean Distance**: Calculates color similarity using euclidean distance in LAB space <br>
 
 ### Supported Formats
 
@@ -66,9 +64,9 @@ Any image size (larger images may take longer to process)
 
 This project started as a fun way to learn Rust, so I'd love to hear your thoughts! Especially:
 
-Accuracy improvements: Know better color matching algorithms?
-Performance optimizations: Ideas for faster color extraction?
-Feature suggestions: What would make this more useful or fun?
+Accuracy improvements: Know better color matching algorithms? <br>
+Performance optimizations: Ideas for faster color extraction? <br>
+Feature suggestions: What would make this more useful or fun? <br>
 
 Feel free to open issues or PRs!
 
