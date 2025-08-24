@@ -4,6 +4,8 @@ Find pokemon that match your image's color palette! Upload any image and discove
 
 ![Smeargle](smeargle.png)
 
+---
+
 ## What it does
 
 Ever wondered which Pokemon would blend perfectly with your favorite photo? This CLI tool analyzes the dominant colors in any image and finds Pokemon with the most similar color palettes.
@@ -25,6 +27,8 @@ pokepalette -i sunset.jpg -t 5
 ```bash
 pokepalette [OPTIONS] --image <IMAGE>
 ```
+
+---
 
 ### Options
 
