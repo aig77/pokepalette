@@ -1,2 +1,7 @@
 /target
 output.txt
+
+.devenv
+.direnv
+.envrc
+

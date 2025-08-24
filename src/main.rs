@@ -1,103 +1,131 @@
-mod flags;
-mod sprite;
-mod palette;
-mod color;
-mod jsonify;
-mod wal;
 mod distance;
+mod quantize;
+mod sprite;
 
-use std::cmp::Ordering;
-use rand::Rng;
-use std::error::Error;
+use pokepalette::{
+    DB_PATH, DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE, DEFAULT_TOP_K,
+};
 
-use flags::Flags;
-use color::Rgb;
-use palette::Palette;
+use anyhow::Result;
+use clap::Parser;
+use image;
+use image::Pixel;
+use quantize::{get_palette, WeightedColor};
+use serde_json;
 use sprite::Sprite;
-use wal::get_wal_palette;
-use jsonify::read_sprites_json;
-// use jsonify::generate_sprites_json;
+use std::fs;
 
-const JSON_PATH: &str = "./data/sprites.json";
-// const SPRITES_PATH: &str = "./data/pokemon-gen8";
-const WAL_PALETTE_SIZE: usize = 8;
+/// Match pokemon color palettes to your images
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Path to the image to find pokemon palettes
+    #[arg(short, long)]
+    image: String,
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let flags =  Flags::new();
+    /// Number of pokemon palettes provided
+    #[arg(short, long, default_value_t = DEFAULT_TOP_K)]
+    top_k: usize,
 
-    let wal = get_wal_palette(WAL_PALETTE_SIZE);
+    /// Whether to print additional information about the pokemon
+    #[arg(short, long, default_value_t = false)]
+    verbose: bool,
+}
 
-    // generate_sprites_json(SPRITES_PATH, JSON_PATH)?;
+fn main() -> Result<()> {
+    let args = Args::parse();
 
-    let sprites = read_sprites_json(JSON_PATH, &flags)?;
+    // Load database
+    let file = fs::File::open(DB_PATH).expect("Failed to open pokemon.json");
+    let sprites: Vec<Sprite> = serde_json::from_reader(file).expect("Failed to parse pokemon.json");
 
-    let k = flags.k;
-    let top_k_e = get_k_nearest_sprites(&sprites, &wal, k, distance::EuclideanDistanceFn);
-    let top_k_d = get_k_nearest_sprites(&sprites, &wal, k, distance::DE2000DistanceFn);
-    let top_k_m = get_k_nearest_sprites(&sprites, &wal, k, distance::MSSDDistanceFn);
+    // Generate image palette
+    let image_palette = get_image_palette(&args.image)?;
 
-    if flags.verbose {
-        println!("wal:  {}\n", wal);
-        println!("----------------------------");
-        println!("********** Euclidean **********\n");
+    // Get sprites sorted by distance to image
+    let ranked = get_pokemon_ranked(&image_palette, &sprites);
 
-        for (dist, sprite) in &top_k_e {
-            println!("{}", sprite);
-            println!("distance: {:.4}\n", dist);
-        }
+    // Get top k
+    let top: Vec<(&Sprite, f32)> = ranked.into_iter().take(args.top_k).collect();
 
-        println!("********** DE2000 **********\n");
-
-        for (dist, sprite) in &top_k_d {
-            println!("{}", sprite);
-            println!("distance: {:.4}\n", dist);
-        }
-
-        println!("********** MSSD **********\n");
-
-        for (dist, sprite) in &top_k_m {
-            println!("{}", sprite);
-            println!("distance: {:.4}\n", dist);
-        }
+    // Print results
+    if args.verbose {
+        print_image_information(image_palette);
+        print_top_information(&top);
+    } else {
+        print_result(&top);
     }
-
-    let mut rng = rand::thread_rng();
-    let rand = rng.gen_range(0..k);
-    println!("{}", top_k_e[rand].1.name);
 
     Ok(())
 }
 
-fn get_k_nearest_sprites<'a, D>(
-    sprites: &'a [Sprite], 
-    palette: &Palette<Rgb<u8>>, 
-    k: usize, 
-    distance_fn: D,
-) -> Vec<(f64, &'a Sprite)> 
-where 
-    D: distance::DistanceFn<f64> + Clone
-{
-    let mut distances: Vec<(f64, &'a Sprite)> = sprites
-        .iter()
-        .map(|sprite| {
-            let distance = distance_fn.palette_distance(&sprite.palette, palette);
-            (distance, sprite)
+fn get_image_palette(path: &str) -> Result<Vec<WeightedColor>> {
+    let rgb = image::open(path)?.to_rgb8();
+    let pixels = rgb.pixels();
+
+    let colors = pixels
+        .into_iter()
+        .map(|pixel| {
+            let color = pixel.to_rgb();
+            [color[0] as u8, color[1] as u8, color[2] as u8]
         })
         .collect();
 
-    distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal));
-
-    distances
-        .iter()
-        .take(k)
-        .map(|&(dist, sprite)| (dist, sprite))
-        .collect()
+    Ok(get_palette(
+        &colors,
+        DEFAULT_PALETTE_SIZE,
+        DEFAULT_LEVELS,
+        false,
+    ))
 }
 
+fn get_pokemon_ranked<'a>(
+    image_palette: &Vec<quantize::WeightedColor>,
+    sprites: &'a Vec<Sprite>,
+) -> Vec<(&'a Sprite, f32)> {
+    let mut distances: Vec<(&'a Sprite, f32)> = sprites
+        .iter()
+        .map(|sprite| {
+            let dist = distance::palette_distance(&sprite.palette, &image_palette);
+            (sprite, dist)
+        })
+        .collect();
 
+    distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
+    distances
+}
 
+fn print_result(top: &Vec<(&Sprite, f32)>) {
+    for (sprite, _) in top {
+        let shiny = if sprite.shiny {
+            " (shiny)".to_string()
+        } else {
+            "".to_string()
+        };
+        println!("{}{}", sprite.name, shiny);
+    }
+}
 
+fn print_image_information(image_palette: Vec<WeightedColor>) {
+    for weighted_color in &image_palette {
+        println!(
+            "\x1b[48;2;{};{};{}m   \x1b[0m RGB({:>3}, {:>3}, {:>3}). Freq: {}",
+            weighted_color.color[0],
+            weighted_color.color[1],
+            weighted_color.color[2],
+            weighted_color.color[0],
+            weighted_color.color[1],
+            weighted_color.color[2],
+            weighted_color.freq,
+        );
+    }
 
+    println!("");
+}
 
-
+fn print_top_information(top: &Vec<(&Sprite, f32)>) {
+    for (sprite, distance) in top {
+        println!("{}\nScore: {}\n", sprite, distance);
+    }
+}

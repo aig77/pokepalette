@@ -1,0 +1,10 @@
+mod distance;
+pub mod quantize;
+pub mod sprite;
+
+pub const KRABBY_BASE_URL: &str = "https://raw.githubusercontent.com/yannjor/krabby/main/";
+pub const DB_PATH: &str = "pokemon.json";
+pub const DEFAULT_PALETTE_SIZE: usize = 5;
+pub const DEFAULT_LEVELS: usize = 8;
+pub const DEFAULT_IGNORE_BLACK: bool = true;
+pub const DEFAULT_TOP_K: usize = 10;
