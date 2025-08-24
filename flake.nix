@@ -37,6 +37,11 @@
               inherit inputs pkgs;
               modules = [
                 {
+                  packages = with pkgs; [
+                    openssl
+                    pkg-config
+                  ];
+
                   languages = {
                     rust = {
                       enable = true;
@@ -53,6 +58,8 @@
 
                   env = {
                     RUST_BACKTRACE = 1;
+                    OPENSSL_DIR = "${pkgs.openssl.dev}";
+                    OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib";
                   };
 
                   enterShell = ''

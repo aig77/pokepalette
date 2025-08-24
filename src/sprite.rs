@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::quantize::{get_palette, WeightedColor};
+use crate::{DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE};
 use anyhow::Result;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -22,12 +23,7 @@ pub struct Sprite {
 enum SpriteError {}
 
 impl Sprite {
-    pub fn new(
-        path: PathBuf,
-        palette_size: usize,
-        levels: usize,
-        ignore_black: bool,
-    ) -> Result<Self> {
+    pub fn from_path(path: PathBuf) -> Result<Self> {
         let name = path
             .file_name()
             .unwrap()
@@ -56,10 +52,48 @@ impl Sprite {
         let contents = fs::read_to_string(&path).expect("Should have been able to read the file");
 
         let colors = extract_colors(&contents)?;
-        let palette = get_palette(&colors, palette_size, levels, ignore_black);
+        let palette = get_palette(
+            &colors,
+            DEFAULT_PALETTE_SIZE,
+            DEFAULT_LEVELS,
+            DEFAULT_IGNORE_BLACK,
+        );
 
         Ok(Sprite {
             name,
+            shiny,
+            mega,
+            gmax,
+            region,
+            palette,
+        })
+    }
+
+    pub fn from_content(content: &str, name: &str, shiny: bool) -> Result<Self> {
+        let mega = name.ends_with("mega")
+            || name.ends_with("mega-x")
+            || name.ends_with("mega-y")
+            || name.ends_with("primal");
+
+        let gmax = name.ends_with("gmax");
+
+        let region = match name {
+            s if s.ends_with("alola") => Some("alola".to_string()),
+            s if s.ends_with("galar") => Some("galar".to_string()),
+            s if s.ends_with("hisui") => Some("hisui".to_string()),
+            _ => None,
+        };
+
+        let colors = extract_colors(&content)?;
+        let palette = get_palette(
+            &colors,
+            DEFAULT_PALETTE_SIZE,
+            DEFAULT_LEVELS,
+            DEFAULT_IGNORE_BLACK,
+        );
+
+        Ok(Sprite {
+            name: name.to_string(),
             shiny,
             mega,
             gmax,
