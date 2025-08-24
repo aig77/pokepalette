@@ -75,7 +75,7 @@ fn get_image_palette(path: &str) -> Result<Vec<WeightedColor>> {
         &colors,
         DEFAULT_PALETTE_SIZE,
         DEFAULT_LEVELS,
-        DEFAULT_IGNORE_BLACK,
+        false,
     ))
 }
 
