@@ -12,7 +12,7 @@ Ever wondered which Pokemon would blend perfectly with your favorite photo? This
 
 ```bash
 # Find Pokemon that match your sunset photo
-pokepalette -i sunset.jpg -t 5
+pokepalette sunset.jpg -t 5
 
 # Results:
 # 1. Charizard
@@ -25,7 +25,7 @@ pokepalette -i sunset.jpg -t 5
 ## Usage:
 
 ```bash
-pokepalette [OPTIONS] --image <IMAGE>
+pokepalette <IMAGE> [OPTIONS]
 ```
 
 ---
@@ -34,17 +34,16 @@ pokepalette [OPTIONS] --image <IMAGE>
 
 | Option                 | Description                               |
 | ---------------------- | ----------------------------------------- |
-| `-i, --image <IMAGE>`  | Path to the image file (**REQUIRED**)     |
 | `-t, --top-k <NUMBER>` | Number of Pokemon to return (default: 10) |
 
 ### Examples
 
 ```bash
 # Basic usage - find top 10 matching Pokemon
-pokepalette -i my_photo.jpg
+pokepalette my_photo.jpg
 
 # Get more results
-pokepalette -i landscape.png -t 20
+pokepalette landscape.png -t 20
 ```
 
 ### How it works
