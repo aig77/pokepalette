@@ -1,13 +1,11 @@
+mod cli;
 mod distance;
 mod quantize;
 mod sprite;
 
-use pokepalette::{
-    DB_PATH, DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE, DEFAULT_TOP_K,
-};
+use pokepalette::{DB_PATH, DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE_SIZE};
 
 use anyhow::Result;
-use clap::Parser;
 use image;
 use image::Pixel;
 use quantize::{get_palette, WeightedColor};
@@ -15,40 +13,25 @@ use serde_json;
 use sprite::Sprite;
 use std::fs;
 
-/// Match pokemon color palettes to your images
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Path to the image to find pokemon palettes
-    image: String,
-
-    /// Number of pokemon palettes provided
-    #[arg(short, long, default_value_t = DEFAULT_TOP_K)]
-    top_k: usize,
-
-    /// Whether to print additional information about the pokemon
-    #[arg(short, long, default_value_t = false)]
-    verbose: bool,
-}
-
 fn main() -> Result<()> {
-    let args = Args::parse();
-
     // Load database
     let file = fs::File::open(DB_PATH).expect("Failed to open pokemon.json");
     let sprites: Vec<Sprite> = serde_json::from_reader(file).expect("Failed to parse pokemon.json");
 
+    // Load CLI config and filters
+    let (config, filtered) = cli::get_config_and_filter_sprites(sprites);
+
     // Generate image palette
-    let image_palette = get_image_palette(&args.image)?;
+    let image_palette = get_image_palette(&config.image)?;
 
     // Get sprites sorted by distance to image
-    let ranked = get_pokemon_ranked(&image_palette, &sprites);
+    let ranked = get_pokemon_ranked(&image_palette, &filtered);
 
     // Get top k
-    let top: Vec<(&Sprite, f32)> = ranked.into_iter().take(args.top_k).collect();
+    let top: Vec<(&Sprite, f32)> = ranked.into_iter().take(config.top_k).collect();
 
     // Print results
-    if args.verbose {
+    if config.verbose {
         print_image_information(image_palette);
         print_top_information(&top);
     } else {
