@@ -20,7 +20,6 @@ use std::fs;
 #[command(version, about, long_about = None)]
 struct Args {
     /// Path to the image to find pokemon palettes
-    #[arg(short, long)]
     image: String,
 
     /// Number of pokemon palettes provided
