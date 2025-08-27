@@ -9,7 +9,7 @@ use anyhow::Result;
 use image;
 use quantize::WeightedColor;
 use serde_json;
-use sprite::Sprite;
+use sprite::{Form, Sprite};
 use std::fs;
 
 fn main() -> Result<()> {
@@ -88,7 +88,14 @@ fn print_result(top: &Vec<(&Sprite, f32)>) {
         } else {
             "".to_string()
         };
-        println!("{}{}", sprite.name, shiny);
+
+        let form = if sprite.form != Form::Regular {
+            format!(" --form {}", sprite.form)
+        } else {
+            "".to_string()
+        };
+
+        println!("{}{}{}", sprite.name, shiny, form);
     }
 }
 

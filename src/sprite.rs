@@ -6,16 +6,67 @@ use anyhow::Result;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::fs;
-use std::path::PathBuf;
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum Form {
+    Regular,
+    Mega(MegaType),
+    Gmax,
+    Regional(Region),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum MegaType {
+    Base,   // "mega"
+    X,      // "mega-x"
+    Y,      // "mega-y"
+    Primal, // "primal"
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum Region {
+    Alola, // "alola"
+    Galar, // "galar"
+    Hisui, // "hisui"
+}
+
+impl fmt::Display for Form {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Form::Regular => write!(f, "Regular"),
+            Form::Mega(mega_type) => write!(f, "{}", mega_type),
+            Form::Gmax => write!(f, "gmax"),
+            Form::Regional(region) => write!(f, "{}", region),
+        }
+    }
+}
+
+impl fmt::Display for MegaType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MegaType::Base => write!(f, "mega"),
+            MegaType::X => write!(f, "mega-X"),
+            MegaType::Y => write!(f, "mega-Y"),
+            MegaType::Primal => write!(f, "primal"),
+        }
+    }
+}
+
+impl fmt::Display for Region {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Region::Alola => write!(f, "alola"),
+            Region::Galar => write!(f, "galar"),
+            Region::Hisui => write!(f, "hisui"),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Sprite {
     pub name: String,
     pub shiny: bool,
-    pub mega: bool,
-    pub gmax: bool,
-    pub region: Option<String>,
+    pub form: Form,
     pub palette: Vec<WeightedColor>,
 }
 
@@ -23,66 +74,8 @@ pub struct Sprite {
 enum SpriteError {}
 
 impl Sprite {
-    pub fn from_path(path: PathBuf) -> Result<Self> {
-        let name = path
-            .file_name()
-            .unwrap()
-            .to_str()
-            .expect("No filename found")
-            .to_string();
-
-        let path_str = path.to_string_lossy();
-
-        let shiny = path_str.contains("shiny");
-
-        let mega = path_str.ends_with("mega")
-            || path_str.ends_with("mega-x")
-            || path_str.ends_with("mega-y")
-            || path_str.ends_with("primal");
-
-        let gmax = path_str.ends_with("gmax");
-
-        let region = match path_str {
-            s if s.ends_with("alola") => Some("alola".to_string()),
-            s if s.ends_with("galar") => Some("galar".to_string()),
-            s if s.ends_with("hisui") => Some("hisui".to_string()),
-            _ => None,
-        };
-
-        let contents = fs::read_to_string(&path).expect("Should have been able to read the file");
-
-        let colors = extract_colors(&contents)?;
-        let palette = get_palette(
-            &colors,
-            DEFAULT_PALETTE_SIZE,
-            DEFAULT_LEVELS,
-            DEFAULT_IGNORE_BLACK,
-        );
-
-        Ok(Sprite {
-            name,
-            shiny,
-            mega,
-            gmax,
-            region,
-            palette,
-        })
-    }
-
     pub fn from_content(content: &str, name: &str, shiny: bool) -> Result<Self> {
-        let mega = name.ends_with("mega")
-            || name.ends_with("mega-x")
-            || name.ends_with("mega-y")
-            || name.ends_with("primal");
-
-        let gmax = name.ends_with("gmax");
-
-        let region = match name {
-            s if s.ends_with("alola") => Some("alola".to_string()),
-            s if s.ends_with("galar") => Some("galar".to_string()),
-            s if s.ends_with("hisui") => Some("hisui".to_string()),
-            _ => None,
-        };
+        let (clean_name, form) = Sprite::parse_name_and_form(&name);
 
         let colors = extract_colors(&content)?;
         let palette = get_palette(
@@ -93,13 +86,49 @@ impl Sprite {
         );
 
         Ok(Sprite {
-            name: name.to_string(),
+            name: clean_name,
             shiny,
-            mega,
-            gmax,
-            region,
+            form,
             palette,
         })
+    }
+
+    fn parse_name_and_form(name: &str) -> (String, Form) {
+        match name {
+            s if s.ends_with("-mega-x") => match s.strip_suffix("-mega-x") {
+                Some(clean) => (clean.to_string(), Form::Mega(MegaType::X)),
+                None => panic!("Failed to strip '-mega-x' from '{}'", s),
+            },
+            s if s.ends_with("-mega-y") => match s.strip_suffix("-mega-y") {
+                Some(clean) => (clean.to_string(), Form::Mega(MegaType::Y)),
+                None => panic!("Failed to strip '-mega-y' from '{}'", s),
+            },
+            s if s.ends_with("-mega") => match s.strip_suffix("-mega") {
+                Some(clean) => (clean.to_string(), Form::Mega(MegaType::Base)),
+                None => panic!("Failed to strip '-mega' from '{}'", s),
+            },
+            s if s.ends_with("-primal") => match s.strip_suffix("-primal") {
+                Some(clean) => (clean.to_string(), Form::Mega(MegaType::Primal)),
+                None => panic!("Failed to strip '-primal' from '{}'", s),
+            },
+            s if s.ends_with("-gmax") => match s.strip_suffix("-gmax") {
+                Some(clean) => (clean.to_string(), Form::Gmax),
+                None => panic!("Failed to strip '-gmax' from '{}'", s),
+            },
+            s if s.ends_with("-alola") => match s.strip_suffix("-alola") {
+                Some(clean) => (clean.to_string(), Form::Regional(Region::Alola)),
+                None => panic!("Failed to strip '-alola' from '{}'", s),
+            },
+            s if s.ends_with("-galar") => match s.strip_suffix("-galar") {
+                Some(clean) => (clean.to_string(), Form::Regional(Region::Galar)),
+                None => panic!("Failed to strip '-galar' from '{}'", s),
+            },
+            s if s.ends_with("-hisui") => match s.strip_suffix("-hisui") {
+                Some(clean) => (clean.to_string(), Form::Regional(Region::Hisui)),
+                None => panic!("Failed to strip '-hisui' from '{}'", s),
+            },
+            _ => (name.to_string(), Form::Regular),
+        }
     }
 }
 
@@ -110,14 +139,8 @@ impl fmt::Display for Sprite {
         if self.shiny {
             writeln!(f, "  Shiny variant")?;
         }
-        if self.mega {
-            writeln!(f, "  Mega evolution")?;
-        }
-        if self.gmax {
-            writeln!(f, "  Gigantamax form")?;
-        }
-        if let Some(region) = &self.region {
-            writeln!(f, "  {} variant", region)?;
+        if self.form != Form::Regular {
+            writeln!(f, "  Form: {}", self.form)?;
         }
 
         writeln!(f, "  Top Colors:")?;
