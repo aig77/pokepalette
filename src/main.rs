@@ -81,7 +81,7 @@ fn get_pokemon_ranked<'a>(
 fn print_result(top: &Vec<(&Sprite, f32)>) {
     for (sprite, _) in top {
         let shiny = if sprite.shiny {
-            " (shiny)".to_string()
+            " -s".to_string()
         } else {
             "".to_string()
         };
