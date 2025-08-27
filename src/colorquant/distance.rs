@@ -1,6 +1,4 @@
-#![allow(dead_code)]
-
-use crate::quantize::WeightedColor;
+use super::quantize::WeightedColor;
 use lab::Lab;
 
 pub fn palette_distance(palette_a: &Vec<WeightedColor>, palette_b: &Vec<WeightedColor>) -> f32 {
