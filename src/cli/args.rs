@@ -1,8 +1,5 @@
-#![allow(dead_code)]
-
-use pokepalette::DEFAULT_TOP_K;
-
 use crate::sprite::{Form, Sprite};
+use crate::DEFAULT_TOP_K;
 use clap::{ArgGroup, Parser};
 
 /// Find pokemon color palettes that are similar to your image
