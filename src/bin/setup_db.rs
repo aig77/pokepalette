@@ -14,7 +14,6 @@ const OUTPUT_FILE_PATH: &str = "pokemon.json";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let verbose = true;
     let mut sprites: Vec<Sprite> = Vec::new();
 
     let pokemon_names = get_pokemon_list().await?;
@@ -41,7 +40,7 @@ async fn main() -> Result<()> {
     }
 
     // Process in batchces
-    let batch_size = 20;
+    let batch_size = 10;
     for batch in all_urls.chunks(batch_size) {
         let mut tasks = Vec::new();
 
@@ -51,7 +50,7 @@ async fn main() -> Result<()> {
             let is_shiny = *is_shiny;
 
             let task = tokio::spawn(async move {
-                sleep(Duration::from_millis(50)).await;
+                sleep(Duration::from_millis(100)).await;
 
                 match download_file(&url).await {
                     Ok(content) => Sprite::from_content(&content, &name_clone, is_shiny),
@@ -64,9 +63,6 @@ async fn main() -> Result<()> {
         // Wait for all downloads to complete
         for task in tasks {
             if let Ok(Ok(sprite)) = task.await {
-                if verbose {
-                    println!("{sprite}");
-                }
                 sprites.push(sprite);
             }
 

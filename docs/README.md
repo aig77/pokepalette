@@ -6,7 +6,7 @@ Find pokemon that match your image's color palette! Upload any image and discove
 
 ## What it does
 
-Ever wondered which Pokemon would blend perfectly with your favorite photo? This CLI tool analyzes the dominant colors in any image and finds Pokemon with the most similar color palettes. Shiny variants are differentiated a with "-s".
+Ever wondered which Pokemon would blend perfectly with your favorite photo? This CLI tool analyzes the dominant colors in any image and finds Pokemon with the most similar color palettes.
 
 ```bash
 # Find Pokemon that match your sunset photo
@@ -17,8 +17,10 @@ pokepalette sunset.jpg -t 5
 # moltres
 # arcanine
 # raikou -s
-# rapidash
+# charizard --form mega-y
 ```
+
+Shiny variants are differentiated with -s. Different forms will be indicated with --form <form>. This format can be plugged directly into [**krabby**](https://github.com/yannjor/krabby).
 
 ## Usage:
 

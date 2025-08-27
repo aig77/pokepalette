@@ -2,7 +2,7 @@
 
 use pokepalette::DEFAULT_TOP_K;
 
-use crate::sprite::Sprite;
+use crate::sprite::{Form, Sprite};
 use clap::{ArgGroup, Parser};
 
 /// Find pokemon color palettes that are similar to your image
@@ -88,9 +88,22 @@ fn filter_sprites(sprites: Vec<Sprite>, args: &Args) -> Vec<Sprite> {
         .filter(|sprite| {
             let shiny_condition =
                 (!args.no_shiny || !sprite.shiny) && (!args.all_shiny || sprite.shiny);
-            let mega_condition = (!args.no_mega || !sprite.mega) && (!args.all_mega || sprite.mega);
-            let gmax_condition = (!args.no_gmax || !sprite.gmax) && (!args.all_gmax || sprite.gmax);
-            let regional_condition = !args.no_regional || sprite.region.is_none();
+
+            let mega_condition = {
+                let is_mega = matches!(sprite.form, Form::Mega(_));
+                (!args.no_mega || !is_mega) && (!args.all_mega || is_mega)
+            };
+
+            let gmax_condition = {
+                let is_gmax = matches!(sprite.form, Form::Gmax);
+                (!args.no_gmax || !is_gmax) && (!args.all_gmax || is_gmax)
+            };
+
+            let regional_condition = {
+                let is_regional = matches!(sprite.form, Form::Regional(_));
+                !args.no_regional || !is_regional
+            };
+
             shiny_condition && mega_condition && gmax_condition && regional_condition
         })
         .collect()

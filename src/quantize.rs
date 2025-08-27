@@ -49,8 +49,6 @@ pub fn get_palette(
         *quantized_counts.entry(qcolor).or_insert(0) += 1;
     }
 
-    println!("{:?}", quantized_counts);
-
     let mut sorted: Vec<_> = quantized_counts.into_iter().collect();
     sorted.sort_by(|a, b| b.1.cmp(&a.1));
 
