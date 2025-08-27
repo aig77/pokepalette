@@ -83,19 +83,17 @@ fn get_pokemon_ranked<'a>(
 
 fn print_result(top: &Vec<(&Sprite, f32)>) {
     for (sprite, _) in top {
-        let shiny = if sprite.shiny {
-            " -s".to_string()
-        } else {
-            "".to_string()
-        };
+        print!("{}", sprite.name);
 
-        let form = if sprite.form != Form::Regular {
-            format!(" --form {}", sprite.form)
-        } else {
-            "".to_string()
-        };
+        if sprite.shiny {
+            print!(" -s");
+        }
 
-        println!("{}{}{}", sprite.name, shiny, form);
+        if sprite.form != Form::Regular {
+            print!(" -f {}", sprite.form);
+        }
+
+        println!();
     }
 }
 
