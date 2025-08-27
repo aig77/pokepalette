@@ -33,7 +33,7 @@ pub enum Region {
 impl fmt::Display for Form {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Form::Regular => write!(f, "Regular"),
+            Form::Regular => write!(f, "regular"),
             Form::Mega(mega_type) => write!(f, "{}", mega_type),
             Form::Gmax => write!(f, "gmax"),
             Form::Regional(region) => write!(f, "{}", region),
@@ -45,8 +45,8 @@ impl fmt::Display for MegaType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             MegaType::Base => write!(f, "mega"),
-            MegaType::X => write!(f, "mega-X"),
-            MegaType::Y => write!(f, "mega-Y"),
+            MegaType::X => write!(f, "mega-x"),
+            MegaType::Y => write!(f, "mega-y"),
             MegaType::Primal => write!(f, "primal"),
         }
     }
