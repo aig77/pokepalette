@@ -7,8 +7,7 @@ use pokepalette::{DB_PATH, DEFAULT_IGNORE_BLACK, DEFAULT_LEVELS, DEFAULT_PALETTE
 
 use anyhow::Result;
 use image;
-use image::Pixel;
-use quantize::{get_palette, WeightedColor};
+use quantize::WeightedColor;
 use serde_json;
 use sprite::Sprite;
 use std::fs;
@@ -42,18 +41,22 @@ fn main() -> Result<()> {
 }
 
 fn get_image_palette(path: &str) -> Result<Vec<WeightedColor>> {
-    let rgb = image::open(path)?.to_rgb8();
-    let pixels = rgb.pixels();
+    // Convert to rgba first to filter transparent pixels
+    let rgba = image::open(path)?.to_rgba8();
 
-    let colors = pixels
-        .into_iter()
-        .map(|pixel| {
-            let color = pixel.to_rgb();
-            [color[0] as u8, color[1] as u8, color[2] as u8]
+    let colors: Vec<[u8; 3]> = rgba
+        .pixels()
+        .filter_map(|pixel| {
+            if pixel[3] == 0 {
+                // Skip fully transparent pixels
+                None
+            } else {
+                Some([pixel[0], pixel[1], pixel[2]])
+            }
         })
         .collect();
 
-    Ok(get_palette(
+    Ok(quantize::get_palette(
         &colors,
         DEFAULT_PALETTE_SIZE,
         DEFAULT_LEVELS,
