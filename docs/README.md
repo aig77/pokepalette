@@ -20,7 +20,7 @@ pokepalette sunset.jpg -t 5
 # charizard --form mega-y
 ```
 
-Shiny variants are differentiated with -s. Different forms will be indicated with --form `<form>`. This format can be plugged directly into [**krabby**](https://github.com/yannjor/krabby).
+Shiny variants are differentiated with `-s`. Different forms will be indicated with `--form <form>`. This format can be plugged directly into [**krabby**](https://github.com/yannjor/krabby).
 
 ## Usage:
 
@@ -53,11 +53,11 @@ pokepalette landscape.png -t 20
 
 ### Background
 
-This project originally started as a small side-quest while I was ricing my Arch Linux setup with **neofetch** and **pywal**.  
+This project originally started as a small side-quest while I was ricing my Arch Linux setup with [neofetch](https://github.com/dylanaraps/neofetch) and [pywal](https://github.com/dylanaraps/pywal).  
 I wanted to find Pokémon sprites that matched the colors of my terminal and wallpaper, but I couldn’t find any tool that did this automatically. So I decided to build one myself.
 
 This tool is best paired with [**krabby**](https://github.com/yannjor/krabby), since the results are formatted to work directly with the `krabby` CLI tool.  
-That means you can generate palettes with **PokePalette** and instantly use them in **krabby** without extra conversion.
+That means you can generate palettes with **PokePalette** and instantly use them in `krabby` without extra conversion.
 
 Although I’ve since moved on to using **NixOS**, I still wanted to finish this project. It’s been a fun way to explore **Rust**, experiment with computer vision, and learn more about color theory.  
 What started as a simple utility for my own setup has grown into a project I hope others can also find fun or useful.
