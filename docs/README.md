@@ -4,22 +4,20 @@ Find pokemon that match your image's color palette! Upload any image and discove
 
 ![Smeargle](smeargle.png)
 
----
-
 ## What it does
 
-Ever wondered which Pokemon would blend perfectly with your favorite photo? This CLI tool analyzes the dominant colors in any image and finds Pokemon with the most similar color palettes.
+Ever wondered which Pokemon would blend perfectly with your favorite photo? This CLI tool analyzes the dominant colors in any image and finds Pokemon with the most similar color palettes. Shiny variants are differentiated a with "-s".
 
 ```bash
 # Find Pokemon that match your sunset photo
 pokepalette sunset.jpg -t 5
 
 # Results:
-# 1. Charizard
-# 2. Moltres
-# 3. Arcanine
-# 4. Rapidash
-# 5. Flareon
+# charizard
+# moltres
+# arcanine
+# raikou -s
+# rapidash
 ```
 
 ## Usage:
@@ -28,13 +26,18 @@ pokepalette sunset.jpg -t 5
 pokepalette <IMAGE> [OPTIONS]
 ```
 
----
-
 ### Options
 
-| Option                 | Description                               |
-| ---------------------- | ----------------------------------------- |
-| `-t, --top-k <NUMBER>` | Number of Pokemon to return (default: 10) |
+| Option                 | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `-t, --top-k <NUMBER>` | Number of Pokemon returned (default: 10) |
+| `--no-shiny`           | Filter out shinies                       |
+| `--all-shiny`          | Filter out non-shinies                   |
+| `--no-mega`            | Filter out megas                         |
+| `--all-mega`           | Filter out non-megas                     |
+| `--no-gmax`            | Filter out gmax                          |
+| `--all-gmax`           | Filter out non-gmax                      |
+| `--no-regional`        | Filter out regional variants             |
 
 ### Examples
 
@@ -45,6 +48,17 @@ pokepalette my_photo.jpg
 # Get more results
 pokepalette landscape.png -t 20
 ```
+
+### Background
+
+This project originally started as a small side-quest while I was ricing my Arch Linux setup with **neofetch** and **pywal**.  
+I wanted to find Pokémon sprites that matched the colors of my terminal and wallpaper, but I couldn’t find any tool that did this automatically. So I decided to build one myself.
+
+This tool is best paired with [**krabby**](https://github.com/yannjor/krabby), since the results are formatted to work directly with the `krabby` CLI tool.  
+That means you can generate palettes with **PokePalette** and instantly use them in **krabby** without extra conversion.
+
+Although I’ve since moved on to using **NixOS**, I still wanted to finish this project. It’s been a fun way to explore **Rust**, experiment with computer vision, and learn more about color theory.  
+What started as a simple utility for my own setup has grown into a project I hope others can also find fun or useful.
 
 ### How it works
 

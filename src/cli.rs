@@ -5,7 +5,7 @@ use pokepalette::DEFAULT_TOP_K;
 use crate::sprite::Sprite;
 use clap::{ArgGroup, Parser};
 
-/// Match pokemon color palettes to your images
+/// Find pokemon color palettes that are similar to your image
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None,
     group(ArgGroup::new("shiny-filter")
@@ -19,16 +19,16 @@ use clap::{ArgGroup, Parser};
         .multiple(false)),
 )]
 struct Args {
-    /// Path to the image to find pokemon palettes
-    pub image: String,
+    /// Path of the image
+    image: String,
 
-    /// Number of pokemon palettes provided
+    /// Number of pokemon returned
     #[arg(short, long, default_value_t = DEFAULT_TOP_K)]
-    pub top_k: usize,
+    top_k: usize,
 
-    /// Whether to print additional information about the pokemon
+    /// Print additional information
     #[arg(short, long, default_value_t = false)]
-    pub verbose: bool,
+    verbose: bool,
 
     /// Filter out shinies
     #[arg(long, default_value_t = false)]
