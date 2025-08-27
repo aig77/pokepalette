@@ -20,7 +20,7 @@ pokepalette sunset.jpg -t 5
 # charizard --form mega-y
 ```
 
-Shiny variants are differentiated with -s. Different forms will be indicated with --form <form>. This format can be plugged directly into [**krabby**](https://github.com/yannjor/krabby).
+Shiny variants are differentiated with -s. Different forms will be indicated with --form `<form>`. This format can be plugged directly into [**krabby**](https://github.com/yannjor/krabby).
 
 ## Usage:
 
