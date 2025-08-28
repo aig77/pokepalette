@@ -1,16 +1,17 @@
 use anyhow::Result;
+use bincode;
 use indicatif::{ProgressBar, ProgressStyle};
 use pokepalette::sprite::Sprite;
+use pokepalette::DB_FILE_NAME;
 use pokepalette::KRABBY_BASE_URL;
 use reqwest;
 use serde_json::Value;
 use std::env;
-use std::fs;
 use std::path::PathBuf;
 use tokio::time::{sleep, Duration};
 
+// Create DB in root dir
 const PROJECT_ROOT: &str = env!("CARGO_MANIFEST_DIR");
-const OUTPUT_FILE_PATH: &str = "pokemon.json";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -78,9 +79,13 @@ async fn main() -> Result<()> {
 
     sprites.sort_by(|a, b| a.name.cmp(&b.name));
 
-    let full_output_path = PathBuf::from(PROJECT_ROOT).join(OUTPUT_FILE_PATH);
-    let mut file = fs::File::create(full_output_path)?;
-    serde_json::to_writer_pretty(&mut file, &sprites)?;
+    println!("Creating bin");
+
+    let db_path = PathBuf::from(PROJECT_ROOT).join(DB_FILE_NAME);
+    let binary_data = bincode::serde::encode_to_vec(&sprites, bincode::config::standard())?;
+    std::fs::write(db_path, &binary_data)?;
+
+    println!("Done");
 
     Ok(())
 }
