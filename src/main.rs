@@ -1,18 +1,18 @@
 use anyhow::Result;
-use serde_json;
-use std::fs;
+use bincode;
 
 use pokepalette::colorquant::{get_image_palette, get_pokemon_ranked};
 use pokepalette::sprite::Sprite;
-use pokepalette::DB_PATH;
+use pokepalette::DB_FILE_NAME;
 use pokepalette::{
     get_config_and_filter_sprites, print_image_information, print_result, print_top_information,
 };
 
 fn main() -> Result<()> {
     // Load database
-    let file = fs::File::open(DB_PATH).expect("Failed to open pokemon.json");
-    let sprites: Vec<Sprite> = serde_json::from_reader(file).expect("Failed to parse pokemon.json");
+    let binary_data = std::fs::read(DB_FILE_NAME)?;
+    let (sprites, _): (Vec<Sprite>, usize) =
+        bincode::serde::decode_from_slice(&binary_data, bincode::config::standard())?;
 
     // Load CLI config and filters
     let (config, filtered) = get_config_and_filter_sprites(sprites);
