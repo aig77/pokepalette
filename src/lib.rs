@@ -1,8 +1,8 @@
 pub mod cli;
 pub mod colorquant;
+pub mod pokemondatabase;
 pub mod sprite;
 
-pub use cli::args::{get_config_and_filter_sprites, Config};
 pub use cli::output::{print_image_information, print_result, print_top_information};
 pub use colorquant::{get_palette, palette_distance, WeightedColor};
 
