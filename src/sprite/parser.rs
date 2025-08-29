@@ -58,6 +58,10 @@ impl super::Sprite {
                 Some(clean) => (clean.to_string(), Form::Regional(Region::Hisui)),
                 None => panic!("Failed to strip '-hisui' from '{}'", s),
             },
+            s if s.ends_with("-paldea") => match s.strip_suffix("-paldea") {
+                Some(clean) => (clean.to_string(), Form::Regional(Region::Paldea)),
+                None => panic!("Failed to strip '-paldea' from '{}'", s),
+            },
             _ => (name.to_string(), Form::Regular),
         }
     }

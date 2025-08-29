@@ -19,9 +19,10 @@ pub enum MegaType {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Region {
-    Alola, // "alola"
-    Galar, // "galar"
-    Hisui, // "hisui"
+    Alola,  // "alola"
+    Galar,  // "galar"
+    Hisui,  // "hisui"
+    Paldea, // "paldea"
 }
 
 impl fmt::Display for Form {
@@ -52,6 +53,7 @@ impl fmt::Display for Region {
             Region::Alola => write!(f, "alola"),
             Region::Galar => write!(f, "galar"),
             Region::Hisui => write!(f, "hisui"),
+            Region::Paldea => write!(f, "paldea"),
         }
     }
 }
