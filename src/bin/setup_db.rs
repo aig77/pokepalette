@@ -30,13 +30,13 @@ async fn main() -> Result<()> {
 
     // Create all urls
     let mut all_urls = Vec::new();
-    for name in pokemon_names {
+    for (name, gen) in pokemon_names {
         for variant in ["regular", "shiny"] {
             let url = format!(
                 "{}/assets/colorscripts/{}/{}",
                 KRABBY_BASE_URL, variant, name
             );
-            all_urls.push((url, name.clone(), variant == "shiny"));
+            all_urls.push((url, name.clone(), gen, variant == "shiny"));
         }
     }
 
@@ -45,16 +45,17 @@ async fn main() -> Result<()> {
     for batch in all_urls.chunks(batch_size) {
         let mut tasks = Vec::new();
 
-        for (url, name, is_shiny) in batch {
+        for (url, name, gen, is_shiny) in batch {
             let url = url.clone();
             let name_clone = name.clone();
             let is_shiny = *is_shiny;
+            let gen = *gen;
 
             let task = tokio::spawn(async move {
                 sleep(Duration::from_millis(100)).await;
 
                 match download_file(&url).await {
-                    Ok(content) => Sprite::from_content(&content, &name_clone, is_shiny),
+                    Ok(content) => Sprite::from_content(&content, &name_clone, gen, is_shiny),
                     Err(_) => Err(anyhow::anyhow!("Download failed")),
                 }
             });
@@ -90,7 +91,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn get_pokemon_list() -> Result<Vec<String>> {
+async fn get_pokemon_list() -> Result<Vec<(String, u8)>> {
     let list_url = format!("{}/assets/pokemon.json", KRABBY_BASE_URL);
     let response = download_file(&list_url).await?;
     let json: Value = serde_json::from_str(&response)?;
@@ -109,19 +110,23 @@ async fn download_file(url: &str) -> Result<String> {
     Ok(text)
 }
 
-fn get_variants(pokemon: &Value) -> Vec<String> {
+fn get_variants(pokemon: &Value) -> Vec<(String, u8)> {
     let Some(slug) = pokemon["slug"].as_str() else {
         return vec![];
     };
 
-    let mut variants = vec![slug.to_string()];
+    let Some(gen) = pokemon["gen"].as_u64() else {
+        return vec![];
+    };
+
+    let mut variants = vec![(slug.to_string(), gen as u8)];
 
     if let Some(forms) = pokemon["forms"].as_array() {
         variants.extend(
             forms
                 .iter()
                 .filter_map(|form| form.as_str())
-                .map(|form| format!("{}-{}", slug, form)),
+                .map(|form| (format!("{}-{}", slug, form), gen as u8)),
         );
     }
 

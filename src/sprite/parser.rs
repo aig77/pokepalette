@@ -5,7 +5,7 @@ use anyhow::Result;
 use regex::Regex;
 
 impl super::Sprite {
-    pub fn from_content(content: &str, name: &str, shiny: bool) -> Result<Self> {
+    pub fn from_content(content: &str, name: &str, gen: u8, shiny: bool) -> Result<Self> {
         let (clean_name, form) = Self::parse_name_and_form(&name);
 
         let colors = Self::extract_colors(&content)?;
@@ -18,6 +18,7 @@ impl super::Sprite {
 
         Ok(Self {
             name: clean_name,
+            gen,
             shiny,
             form,
             palette,
