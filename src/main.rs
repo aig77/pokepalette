@@ -11,7 +11,7 @@ fn main() -> Result<()> {
 
     // Load database and filter
     let database = PokemonDatabase::load()?;
-    let sprites = database.filtered(&args);
+    let sprites = database.filtered(&args)?;
 
     // Generate image palette
     let image_palette = get_image_palette(&args.image)?;

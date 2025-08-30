@@ -26,6 +26,9 @@ pub struct Args {
     #[arg(short, long, default_value_t = false)]
     pub verbose: bool,
 
+    #[arg(short, long)]
+    pub gen: Option<String>,
+
     /// Filter out shinies
     #[arg(long, default_value_t = false)]
     pub no_shiny: bool,

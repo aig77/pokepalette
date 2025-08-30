@@ -9,6 +9,7 @@ use std::fmt;
 #[derive(Serialize, Deserialize)]
 pub struct Sprite {
     pub name: String,
+    pub gen: u8,
     pub shiny: bool,
     pub form: Form,
     pub palette: Vec<WeightedColor>,
@@ -17,6 +18,7 @@ pub struct Sprite {
 impl fmt::Display for Sprite {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Pokemon: {}", self.name)?;
+        writeln!(f, "Generation: {}", self.gen)?;
 
         if self.shiny {
             writeln!(f, "  Shiny variant")?;
