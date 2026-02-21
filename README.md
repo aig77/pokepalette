@@ -2,7 +2,7 @@
 
 Find pokemon that match your image's color palette! Upload any image and discover which Pokemon share similar colors using computer vision and color theory.
 
-![Smeargle](smeargle.png)
+![Smeargle](docs/smeargle.png)
 
 ## What it does
 
@@ -33,6 +33,8 @@ pokepalette <IMAGE> [OPTIONS]
 | Option                 | Description                              |
 | ---------------------- | ---------------------------------------- |
 | `-t, --top-k <NUMBER>` | Number of Pokemon returned (default: 10) |
+| `-g, --gen <GEN>`      | Filter by generation (see below)         |
+| `-v, --verbose`        | Print additional color/score info        |
 | `--no-shiny`           | Filter out shinies                       |
 | `--all-shiny`          | Filter out non-shinies                   |
 | `--no-mega`            | Filter out megas                         |
@@ -40,6 +42,18 @@ pokepalette <IMAGE> [OPTIONS]
 | `--no-gmax`            | Filter out gmax                          |
 | `--all-gmax`           | Filter out non-gmax                      |
 | `--no-regional`        | Filter out regional variants             |
+
+### Generation Filtering
+
+The `-g, --gen` option supports flexible generation filtering:
+
+| Format    | Example   | Description                        |
+| --------- | --------- | ---------------------------------- |
+| Single    | `-g 1`    | Only Gen 1 Pokemon                 |
+| Range     | `-g 1-3`  | Gen 1, 2, and 3 Pokemon            |
+| List      | `-g 1,4,8`| Gen 1, 4, and 8 Pokemon            |
+
+Valid generations: 1-9 (Kanto through Paldea)
 
 ### Examples
 
@@ -49,6 +63,15 @@ pokepalette my_photo.jpg
 
 # Get more results
 pokepalette landscape.png -t 20
+
+# Only classic Gen 1 Pokemon
+pokepalette retro.png -g 1
+
+# Gen 1-3 Pokemon, no shinies
+pokepalette wallpaper.jpg -g 1-3 --no-shiny
+
+# Only shiny Mega Pokemon from specific gens
+pokepalette cool.png -g 1,3,6 --all-shiny --all-mega
 ```
 
 ### Background
@@ -91,4 +114,4 @@ Pokemon data sourced from [krabby](https://github.com/yannjor/krabby). This is a
 
 ### License
 
-This project is licensed under the [MIT License](../LICENSE)
+This project is licensed under the [MIT License](LICENSE)
