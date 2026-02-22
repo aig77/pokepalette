@@ -3,6 +3,13 @@ name = "pokepalette"
 version = "0.1.0"
 edition = "2021"
 default-run = "pokepalette"
+description = "Find Pokemon that match your image's color palette"
+authors = ["arturo"]
+license = "MIT"
+repository = "https://github.com/aig77/pokepalette"
+readme = "README.md"
+keywords = ["pokemon", "color", "palette", "cli", "image"]
+categories = ["command-line-utilities", "multimedia::images"]
 
 [dependencies]
 image = "0.25.6"
