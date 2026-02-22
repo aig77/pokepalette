@@ -1,74 +1,86 @@
 {
+  nixConfig = {
+    extra-substituters = [
+      "https://cache.nixos.org"
+      "https://nix-community.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+  };
+
   inputs = {
-    nixpkgs.url = "github:cachix/devenv-nixpkgs/rolling";
-    systems.url = "github:nix-systems/default";
-    devenv = {
-      url = "github:cachix/devenv";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    naersk.url = "github:nix-community/naersk";
+    git-hooks-nix.url = "github:cachix/git-hooks.nix";
   };
 
-  nixConfig = {
-    extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=";
-    extra-substituters = "https://devenv.cachix.org";
-  };
+  outputs = {flake-parts, ...} @ inputs:
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      imports = [inputs.git-hooks-nix.flakeModule];
 
-  outputs = { self, nixpkgs, devenv, systems, ... } @ inputs:
-    let
-      forEachSystem = nixpkgs.lib.genAttrs (import systems);
-    in
-    {
-      packages = forEachSystem (system: {
-        devenv-up = self.devShells.${system}.default.config.procfileScript;
-        devenv-test = self.devShells.${system}.default.config.test;
-      });
+      systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin"];
 
-      devShells = forEachSystem
-        (system:
-          let
-            pkgs = nixpkgs.legacyPackages.${system};
-          in
-          {
-            default = devenv.lib.mkShell {
-              inherit inputs pkgs;
-              modules = [
-                {
-                  packages = with pkgs; [
-                    openssl
-                    pkg-config
-                  ];
+      perSystem = {
+        system,
+        config,
+        lib,
+        ...
+      }: let
+        pkgs = import inputs.nixpkgs {
+          inherit system;
+          overlays = [inputs.rust-overlay.overlays.default];
+        };
 
-                  languages = {
-                    rust = {
-                      enable = true;
-                      channel = "stable"; # nixpkgs, stable, beta, nightly
-                      components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" ];
-                      version = "latest";
-                    };
-                  };
+        # for additional versions: https://github.com/oxalica/rust-overlay
+        rustToolchain = pkgs.rust-bin.stable.latest.default;
 
-                  git-hooks.hooks = {
-                    rustfmt.enable = true;
-                    prettier.enable = true;
-                  };
+        naerskLib = pkgs.callPackage inputs.naersk {
+          cargo = rustToolchain;
+          rustc = rustToolchain;
+        };
+      in {
+        packages.default = naerskLib.buildPackage {src = ./.;};
 
-                  env = {
-                    RUST_BACKTRACE = 1;
-                    OPENSSL_DIR = "${pkgs.openssl.dev}";
-                    OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib";
-                  };
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            rustToolchain
+            rust-analyzer
+            cargo-watch
+            pre-commit
+            docker-compose
+            postgresql
+            redis
+            flyctl
+          ];
 
-                  enterShell = ''
-                    echo ""
-                    echo "⚡️ Entered Pokepalette dev shell! 🦀"
-                  '';
-                }
-              ];
+          RUST_BACKTRACE = 1;
+
+          shellHook = ''
+            ${config.pre-commit.installationScript}
+            echo "🦀 $(rustc --version)"
+          '';
+        };
+
+        pre-commit = {
+          check.enable = false; # Disabled because clippy needs network access for dependencies
+          settings = {
+            hooks = {
+              rustfmt.enable = true;
+              clippy.enable = true;
             };
-          });
+            tools = {
+              cargo = lib.mkForce rustToolchain;
+              clippy = lib.mkForce rustToolchain;
+            };
+          };
+        };
+      };
     };
 }

@@ -22,6 +22,44 @@ pokepalette sunset.jpg -t 5
 
 Shiny variants are differentiated with `-s`. Different forms will be indicated with `--form <form>`. This format can be plugged directly into [**krabby**](https://github.com/yannjor/krabby).
 
+## Installation
+
+### Cargo
+
+```bash
+cargo install pokepalette
+```
+
+See [crates.io/crates/pokepalette](https://crates.io/crates/pokepalette) for more info.
+
+### Nix Flake
+
+Add to your flake inputs:
+
+```nix
+inputs.pokepalette.url = "github:aig77/pokepalette";
+```
+
+Then add to your packages:
+
+```nix
+# NixOS configuration.nix
+environment.systemPackages = [
+  inputs.pokepalette.packages.${pkgs.system}.default
+];
+
+# Or home-manager
+home.packages = [
+  inputs.pokepalette.packages.${pkgs.system}.default
+];
+```
+
+Or run directly:
+
+```bash
+nix run github:aig77/pokepalette -- image.png
+```
+
 ## Usage:
 
 ```bash
